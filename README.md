@@ -17,7 +17,8 @@ El objetivo de este proyecto es acompañar a usuarios principiantes en la constr
 
 *(Se irán actualizando a medida que avancemos en la arquitectura)*
 
-- **Lenguaje / Framework:** 
+- **Lenguaje / Framework:**
+- **Base de Datos:** PostgreSQL
 - **Frontend / Interfaz:**
 - **Control de Versiones:** Git & GitHub
 
@@ -25,9 +26,12 @@ El objetivo de este proyecto es acompañar a usuarios principiantes en la constr
 
 ## 👥 Integrantes - Grupo 7
 
-- **Gonzalez Sofia**
-- **Ortega Yasmin**
-- **Guillen Federico** 
 - **Almada Gonzalo**
+- **Gonzalez Sofia**
+- **Guillen Federico** 
 - **Morilla Lucas**
+- **Ortega Yasmin**
+
+
+
 
