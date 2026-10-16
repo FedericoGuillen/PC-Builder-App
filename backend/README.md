@@ -1,10 +1,19 @@
-Backend
-Esta carpeta contendrá la lógica de negocio de la aplicación, las clases y los servicios necesarios para gestionar los componentes de PC y verificar su compatibilidad.
+# 🖥️ Guía Interactiva de Armado de PC - Backend (TP Final POO 3 - Grupo 7)
 
-**Estructura del Backend**
+Backend desarrollado bajo una **Arquitectura en Capas** estricta (Dominio, Servicios y Controladores/API) aplicando Principios de Programación Orientada a Objetos (POO) y Patrones de Diseño.
+
+---
+
+## 📌 Descripción del Backend
+Esta carpeta contiene la lógica de negocio de la aplicación, las clases y los servicios necesarios para gestionar los componentes de PC y verificar su compatibilidad.
+
+---
+
+## 📂 Estructura del Proyecto
 
 El proyecto está modularizado dentro de la carpeta `backend/` para mantener separadas las responsabilidades del negocio y la interfaz web:
 
+```text
 tpfinal-poo3-grupo7/
 │
 ├── backend/
@@ -24,31 +33,18 @@ tpfinal-poo3-grupo7/
 ├── requirements.txt             # Dependencias del proyecto
 └── README.md                    # Documentación técnica
 
-**Guía de Instalación y Ejecución**
+---
+Guía de Instalación y Ejecución
 1. Clonar el repositorio y abrir la terminal
 Ubícate en la raíz del proyecto (tpfinal-poo3-grupo7/).
 
 2. Crear y activar el entorno virtual
-En Windows (CMD / PowerShell):
 
-Bash
-python -m venv venv
-venv\Scripts\activate
-En Linux / macOS (Terminal):
-
-Bash
-python3 -m venv venv
-source venv/bin/activate
-
-3. Instalar las dependencias
-Instala automáticamente todas las librerías necesarias especificadas en el archivo del proyecto:
-
-Bash
+3. Instalar dependencias
 pip install -r requirements.txt
 
 4. Ejecutar el servidor Uvicorn
 Para levantar la API web, ejecuta el siguiente comando desde la raíz:
-
 En Windows (CMD / PowerShell):
 
 Bash
@@ -58,16 +54,17 @@ En Linux / macOS (Terminal):
 
 Bash
 PYTHONPATH=backend uvicorn backend.main:app --reload
+
 El servidor quedará corriendo en: http://127.0.0.1:8000
 
-**Cómo Probar la API**
-Abre tu navegador web y entra a la documentación interactiva de Swagger UI: http://127.0.0.1:8000/docs
+---
+Cómo Probar la API
+1. Abre tu navegador web y entra a la documentación interactiva de Swagger UI:
+http://127.0.0.1:8000/docs
 
-Despliega el endpoint POST /api/v1/pc/validar-compatibilidad y haz clic en "Try it out".
+2. Despliega el endpoint POST /api/v1/pc/validar-compatibilidad y haz clic en "Try it out".
 
-Envía un JSON de prueba como el siguiente:
-
-JSON
+3. Envía un JSON de prueba como el siguiente:
 {
   "nombre_configuracion": "PC de Prueba Grupo 7",
   "componentes": [
@@ -104,11 +101,4 @@ JSON
   ]
 }
 
-Presiona "Execute" para validar las reglas de negocio en tiempo real.
-
-**Ejecución de Pruebas Unitarias (Pytest)**
-Para correr las pruebas unitarias:
-
-Windows: set PYTHONPATH=backend && pytest -v
-
-Linux/Mac: PYTHONPATH=backend pytest -v
+4. Presiona "Execute" para validar las reglas de negocio en tiempo real.
