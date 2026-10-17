@@ -1,190 +1,156 @@
-
 """
-Aplicación principal para la gestión de marcas.
-
-Permite listar, crear, activar y desactivar marcas
-almacenadas en PostgreSQL.
+Módulo de prueba completo para verificar conexión, lectura y escritura en PostgreSQL
+para el modelo relacional central del proyecto  (Tablas 1 a 8).
 """
 
-from conexion import conectar
+from app.database.conexion import engine, SessionLocal
+from app.domain.modelos import (
+    Usuario,
+    Marca,
+    TipoComponente,
+    Componente,
+    ConfiguracionPC,
+    ConfiguracionComponente,
+    ReglaCompatibilidad,
+    ResultadoCompatibilidad,
+)
 
 
-def listar_marcas():
-    """Muestra todas las marcas registradas en la base de datos."""
-    conexion = conectar()
+def probar_operaciones_modelo_completo():
+    """Ejecuta inserciones y consultas relacionales en el esquema principal."""
+    print("\n" + "=" * 65)
+    print(" VERIFICACIÓN DE OPERACIONES EN EL ESQUEMA COMPLETO (TABLAS 1-8)")
+    print("=" * 65)
 
-    if conexion is None:
-        print("Error: no se pudo conectar a la base de datos.")
-        return
+    db = SessionLocal()
 
     try:
-        with conexion.cursor() as cursor:
-            cursor.execute("""
-                SELECT id_marca, nombre, sitio_web, activo
-                FROM marcas
-                ORDER BY id_marca;
-            """)
+        # 1. MARCAS Y TIPOS
+        print("\n--- 1. Pruebas en 'marcas' y 'tipos_componente' ---")
+        marca_test = Marca(nombre="Marca Test DDL", sitio_web="https://test.com")
+        tipo_test = TipoComponente(
+            nombre="Procesador Test",
+            descripcion="CPU de prueba",
+            obligatorio=True,
+        )
 
-            marcas = cursor.fetchall()
+        db.add_all([marca_test, tipo_test])
+        db.commit()
+        db.refresh(marca_test)
+        db.refresh(tipo_test)
+        print(
+            f"[OK] Marca (ID: {marca_test.id_marca}) y Tipo (ID: {tipo_test.id_tipo}) creados."
+        )
 
-        if not marcas:
-            print("\nNo hay marcas registradas.")
-            return
+        # 2. COMPONENTES
+        print("\n--- 2. Pruebas en 'componentes' ---")
+        cpu_test = Componente(
+            id_marca=marca_test.id_marca,
+            id_tipo=tipo_test.id_tipo,
+            nombre="Intel Core i7-13700K",
+            consumo_watts=125,
+            precio_referencia=420.00,
+            stock=10,
+            especificaciones={"socket": "LGA1700", "cores": 16},
+        )
+        db.add(cpu_test)
+        db.commit()
+        db.refresh(cpu_test)
+        print(
+            f"[OK] Componente creado con ID: {cpu_test.id_componente} | Consumo: {cpu_test.consumo_watts}W"
+        )
 
-        print("\n" + "=" * 85)
-        print("LISTADO DE MARCAS")
-        print("=" * 85)
+        # 3. USUARIOS Y CONFIGURACIONES
+        print("\n--- 3. Pruebas en 'usuarios' y 'configuraciones_pc' ---")
+        usuario_test = Usuario(
+            nombre="Yasmin",
+            apellido="Ortega",
+            email="yasmine.test@ensamblapc.com",
+            password_hash="hash_seguro_123",
+        )
+        db.add(usuario_test)
+        db.commit()
+        db.refresh(usuario_test)
 
-        for id_marca, nombre, sitio_web, activo in marcas:
-            estado = "Activa" if activo else "Inactiva"
-            sitio = sitio_web or "Sin sitio web"
+        config_test = ConfiguracionPC(
+            id_usuario=usuario_test.id_usuario,
+            nombre="PC Gamer Pruebas",
+            estado="BORRADOR",
+            precio_total=420.00,
+        )
+        db.add(config_test)
+        db.commit()
+        db.refresh(config_test)
+        print(
+            f"[OK] Usuario (ID: {usuario_test.id_usuario}) y Configuración (ID: {config_test.id_configuracion}) creados."
+        )
 
-            print(f"ID: {id_marca}")
-            print(f"Nombre: {nombre}")
-            print(f"Sitio web: {sitio}")
-            print(f"Estado: {estado}")
-            print("-" * 85)
+        # 4. CONFIGURACIÓN COMPONENTES (RELACIÓN N:M)
+        print("\n--- 4. Pruebas en 'configuracion_componentes' ---")
+        item_config = ConfiguracionComponente(
+            id_configuracion=config_test.id_configuracion,
+            id_componente=cpu_test.id_componente,
+            cantidad=1,
+            precio_al_seleccionar=cpu_test.precio_referencia,
+        )
+        db.add(item_config)
+        db.commit()
+        print(
+            f"[OK] Componente asociado a la configuración. Consumo total dinámico: {config_test.consumo_total_watts}W"
+        )
+
+        # 5. REGLAS Y RESULTADOS DE COMPATIBILIDAD
+        print(
+            "\n--- 5. Pruebas en 'reglas_compatibilidad' y 'resultados_compatibilidad' ---"
+        )
+        regla_test = ReglaCompatibilidad(
+            nombre="Regla Socket CPU",
+            descripcion="Valida coincidencia de socket entre CPU y Motherboard",
+            codigo="R_SOCKET_01",
+            nivel="ERROR",
+        )
+        db.add(regla_test)
+        db.commit()
+        db.refresh(regla_test)
+
+        resultado_test = ResultadoCompatibilidad(
+            id_configuracion=config_test.id_configuracion,
+            id_regla=regla_test.id_regla,
+            resultado="COMPATIBLE",
+            mensaje="Socket validado correctamente.",
+        )
+        db.add(resultado_test)
+        db.commit()
+        print(
+            f"[OK] Regla (ID: {regla_test.id_regla}) y Resultado guardado correctamente."
+        )
+
+        # 6. LIMPIEZA AUTOMÁTICA CON ON DELETE CASCADE
+        print("\n--- 6. Limpieza de datos de prueba ---")
+        db.delete(
+            usuario_test
+        )  # Elimina en cascada la configuración, sus ítems y resultados
+        db.delete(cpu_test)
+        db.delete(marca_test)
+        db.delete(tipo_test)
+        db.delete(regla_test)
+        db.commit()
+        print(
+            "[INFO] Registros temporales eliminados correctamente mediante la cascada ORM/SQL."
+        )
+
+        print("\n" + "=" * 65)
+        print(
+            " [ÉXITO] EL MODELO DE DATOS Y LAS OPERACIONES CRUD ESTÁN 100% OPERATIVOS"
+        )
+        print("=" * 65 + "\n")
 
     except Exception as error:
-        print(f"Error al consultar las marcas: {error}")
-
+        db.rollback()
+        print(f"\n[ERROR] Durante la prueba relacional: {error}")
     finally:
-        conexion.close()
-
-
-def crear_marca():
-    """Registra una nueva marca."""
-    print("\n--- CREAR MARCA ---")
-
-    nombre = input("Nombre de la marca: ").strip()
-
-    if not nombre:
-        print("Error: el nombre es obligatorio.")
-        return
-
-    sitio_web = input(
-        "Sitio web (opcional, presioná Enter para omitirlo): "
-    ).strip()
-
-    sitio_web = sitio_web or None
-
-    conexion = conectar()
-
-    if conexion is None:
-        print("Error: no se pudo conectar a la base de datos.")
-        return
-
-    try:
-        with conexion:
-            with conexion.cursor() as cursor:
-                cursor.execute("""
-                    INSERT INTO marcas (nombre, sitio_web)
-                    VALUES (%s, %s)
-                    RETURNING id_marca, nombre, sitio_web, activo;
-                """, (nombre, sitio_web))
-
-                marca = cursor.fetchone()
-
-        print("\nMarca creada correctamente.")
-        print(f"ID: {marca[0]}")
-        print(f"Nombre: {marca[1]}")
-        print(f"Sitio web: {marca[2] or 'Sin sitio web'}")
-        print(f"Estado: {'Activa' if marca[3] else 'Inactiva'}")
-
-    except Exception as error:
-        print(f"Error al crear la marca: {error}")
-
-    finally:
-        conexion.close()
-
-
-def cambiar_estado_marca():
-    """Activa o desactiva una marca existente."""
-    print("\n--- CAMBIAR ESTADO DE MARCA ---")
-
-    try:
-        id_marca = int(input("ID de la marca: ").strip())
-    except ValueError:
-        print("Error: ingresá un ID numérico válido.")
-        return
-
-    if id_marca <= 0:
-        print("Error: el ID debe ser mayor que cero.")
-        return
-
-    print("1. Activar marca")
-    print("2. Desactivar marca")
-
-    opcion = input("Seleccioná una opción: ").strip()
-
-    if opcion not in ("1", "2"):
-        print("Opción inválida.")
-        return
-
-    nuevo_estado = opcion == "1"
-
-    conexion = conectar()
-
-    if conexion is None:
-        print("Error: no se pudo conectar a la base de datos.")
-        return
-
-    try:
-        with conexion:
-            with conexion.cursor() as cursor:
-                cursor.execute("""
-                    UPDATE marcas
-                    SET activo = %s
-                    WHERE id_marca = %s
-                    RETURNING id_marca, nombre, activo;
-                """, (nuevo_estado, id_marca))
-
-                marca = cursor.fetchone()
-
-        if marca is None:
-            print(f"No existe una marca con ID {id_marca}.")
-        else:
-            estado = "Activa" if marca[2] else "Inactiva"
-            print(f"Marca '{marca[1]}' actualizada: {estado}.")
-
-    except Exception as error:
-        print(f"Error al actualizar la marca: {error}")
-
-    finally:
-        conexion.close()
-
-
-def mostrar_menu():
-    """Presenta el menú principal de la aplicación."""
-    while True:
-        print("\n" + "=" * 45)
-        print("       SISTEMA DE GESTIÓN DE MARCAS")
-        print("=" * 45)
-        print("1. Listar marcas")
-        print("2. Crear marca")
-        print("3. Activar o desactivar marca")
-        print("0. Salir")
-        print("=" * 45)
-
-        opcion = input("Seleccioná una opción: ").strip()
-
-        if opcion == "1":
-            listar_marcas()
-        elif opcion == "2":
-            crear_marca()
-        elif opcion == "3":
-            cambiar_estado_marca()
-        elif opcion == "0":
-            print("Aplicación finalizada.")
-            break
-        else:
-            print("Opción inválida. Intentá nuevamente.")
-
-
-def main():
-    """Punto de entrada de la aplicación."""
-    mostrar_menu()
+        db.close()
 
 
 if __name__ == "__main__":
-    main()
+    probar_operaciones_modelo_completo()
