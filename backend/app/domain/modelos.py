@@ -1,160 +1,155 @@
+"""
+Modelos ORM de SQLAlchemy mapeados directamente contra las tablas PostgreSQL de EnsamblaPC.
+"""
+
 from datetime import datetime
-from typing import List, Dict, Optional, Any
-
-class Usuario:
-    def __init__(self, id_usuario: int, nombre: str, apellido: Optional[str], email: str, password_hash: str, activo: bool = True):
-        self.id_usuario = id_usuario
-        self.nombre = nombre
-        self.apellido = apellido
-        self.email = email
-        self.password_hash = password_hash
-        self.fecha_registro = datetime.now()
-        self.activo = activo
-
-    def cambiar_estado(self, estado: bool):
-        self.activo = estado
-
-    def __str__(self):
-        return f"Usuario: {self.nombre} {self.apellido or ''} ({self.email})"
-
-
-class Marca:
-    def __init__(self, id_marca: int, nombre: str, sitio_web: Optional[str] = None, activo: bool = True):
-        self.id_marca = id_marca
-        self.nombre = nombre
-        self.sitio_web = sitio_web
-        self.activo = activo
-
-    def __str__(self):
-        return self.nombre
+from sqlalchemy import (
+    Column,
+    BigInteger,
+    String,
+    Text,
+    Boolean,
+    Integer,
+    Numeric,
+    DateTime,
+    ForeignKey,
+    CheckConstraint,
+    UniqueConstraint,
+)
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import relationship
+from app.database.conexion import Base
 
 
-class TipoComponente:
-    def __init__(self, id_tipo: int, nombre: str, descripcion: Optional[str] = None, cantidad_maxima_sugerida: int = 1, obligatorio: bool = False):
-        self.id_tipo = id_tipo
-        self.nombre = nombre
-        self.descripcion = descripcion
-        self.cantidad_maxima_sugerida = cantidad_maxima_sugerida
-        self.obligatorio = obligatorio
+class Usuario(Base):
+    __tablename__ = "usuarios"
 
-    def __str__(self):
-        return self.nombre
+    id_usuario = Column(BigInteger, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False)
+    apellido = Column(String(100), nullable=True)
+    email = Column(String(255), nullable=False, unique=True)
+    password_hash = Column(Text, nullable=False)
+    fecha_registro = Column(DateTime, nullable=False, default=datetime.utcnow)
+    activo = Column(Boolean, nullable=False, default=True)
 
-
-class Componente:
-    def __init__(
-        self, 
-        id_componente: int, 
-        tipo: TipoComponente, 
-        marca: Marca, 
-        nombre: str, 
-        modelo: Optional[str], 
-        descripcion: Optional[str], 
-        consumo_watts: Optional[int], 
-        precio_referencia: float, 
-        stock: int, 
-        especificaciones: Dict[str, Any], 
-        imagen_url: Optional[str] = None
-    ):
-        self.id_componente = id_componente
-        self.tipo = tipo
-        self.marca = marca
-        self.nombre = nombre
-        self.modelo = modelo
-        self.descripcion = descripcion
-        self.consumo_watts = consumo_watts or 0
-        self.precio_referencia = precio_referencia
-        self.stock = stock
-        self.especificaciones = especificaciones  # Mapeo directo del JSONB de la DB
-        self.imagen_url = imagen_url
-        self.activo = True
-        self.fecha_creacion = datetime.now()
-
-    def actualizar_stock(self, cantidad: int):
-        if self.stock + cantidad >= 0:
-            self.stock += cantidad
-        else:
-            raise ValueError(f"Stock insuficiente para el componente '{self.nombre}'.")
-
-    def __str__(self):
-        return f"[{self.marca.nombre}] {self.nombre} - ${self.precio_referencia}"
+    configuraciones = relationship("ConfiguracionPC", back_populates="usuario", cascade="all, delete-orphan")
 
 
-class ConfiguracionComponente:
-    """
-    Representa la tabla intermedia 'configuracion_componentes'.
-    Vincula la PC con el componente y guarda datos específicos del armado (como posición visual y precio histórico).
-    """
-    def __init__(
-        self, 
-        componente: Componente, 
-        cantidad: int = 1, 
-        posicion_x: Optional[float] = None, 
-        posicion_y: Optional[float] = None, 
-        rotacion: float = 0.0
-    ):
-        self.componente = componente
-        self.cantidad = cantidad
-        self.precio_al_seleccionar = componente.precio_referencia  # Congela el precio al elegirlo
-        self.posicion_x = posicion_x
-        self.posicion_y = posicion_y
-        self.rotacion = rotacion
-        self.fecha_agregado = datetime.now()
+class Marca(Base):
+    __tablename__ = "marcas"
 
-    @property
-    def subtotal(self) -> float:
-        return self.precio_al_seleccionar * self.cantidad
+    id_marca = Column(BigInteger, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False, unique=True)
+    sitio_web = Column(Text, nullable=True)
+    activo = Column(Boolean, nullable=False, default=True)
+
+    componentes = relationship("Componente", back_populates="marca")
 
 
-class ConfiguracionPC:
-    """
-    Representa la tabla 'configuraciones_pc' y maneja la lógica de los componentes de la PC del usuario.
-    """
-    def __init__(self, id_configuracion: int, usuario: Usuario, nombre: str, descripcion: Optional[str] = None):
-        self.id_configuracion = id_configuracion
-        self.usuario = usuario
-        self.nombre = nombre
-        self.descripcion = descripcion
-        self.estado = "BORRADOR"  # BORRADOR, COMPLETA, INCOMPATIBLE, FINALIZADA
-        self.es_publica = False
-        self.componentes_agregados: List[ConfiguracionComponente] = []
-        self.fecha_creacion = datetime.now()
-        self.fecha_modificacion = datetime.now()
+class TipoComponente(Base):
+    __tablename__ = "tipos_componente"
 
-    def agregar_componente(self, componente: Componente, cantidad: int = 1, x: Optional[float] = None, y: Optional[float] = None, rotacion: float = 0.0):
-        # Si ya existe en la configuración, actualizamos su cantidad en lugar de duplicarlo
-        for item in self.componentes_agregados:
-            if item.componente.id_componente == componente.id_componente:
-                item.cantidad += cantidad
-                self.fecha_modificacion = datetime.now()
-                return
+    id_tipo = Column(BigInteger, primary_key=True, index=True)
+    nombre = Column(String(100), nullable=False, unique=True)
+    descripcion = Column(Text, nullable=True)
+    cantidad_maxima_sugerida = Column(Integer, nullable=False, default=1)
+    obligatorio = Column(Boolean, nullable=False, default=False)
 
-        nuevo_item = ConfiguracionComponente(componente, cantidad, x, y, rotacion)
-        self.componentes_agregados.append(nuevo_item)
-        self.fecha_modificacion = datetime.now()
+    componentes = relationship("Componente", back_populates="tipo")
 
-    def quitar_componente(self, id_componente: int):
-        self.componentes_agregados = [
-            item for item in self.componentes_agregados 
-            if item.componente.id_componente != id_componente
-        ]
-        self.fecha_modificacion = datetime.now()
 
-    @property
-    def precio_total(self) -> float:
-        return sum(item.subtotal for item in self.componentes_agregados)
+class Componente(Base):
+    __tablename__ = "componentes"
+
+    id_componente = Column(BigInteger, primary_key=True, index=True)
+    id_tipo = Column(BigInteger, ForeignKey("tipos_componente.id_tipo"), nullable=False)
+    id_marca = Column(BigInteger, ForeignKey("marcas.id_marca"), nullable=False)
+    nombre = Column(String(200), nullable=False)
+    modelo = Column(String(150), nullable=True)
+    descripcion = Column(Text, nullable=True)
+    consumo_watts = Column(Integer, nullable=True)
+    precio_referencia = Column(Numeric(12, 2), nullable=True)
+    stock = Column(Integer, nullable=False, default=0)
+    especificaciones = Column(JSONB, nullable=False, default=dict)
+    imagen_url = Column(Text, nullable=True)
+    activo = Column(Boolean, nullable=False, default=True)
+    fecha_creacion = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    marca = relationship("Marca", back_populates="componentes")
+    tipo = relationship("TipoComponente", back_populates="componentes")
+    configuraciones_asociadas = relationship("ConfiguracionComponente", back_populates="componente")
+
+
+class ConfiguracionPC(Base):
+    __tablename__ = "configuraciones_pc"
+
+    id_configuracion = Column(BigInteger, primary_key=True, index=True)
+    id_usuario = Column(BigInteger, ForeignKey("usuarios.id_usuario", ondelete="CASCADE"), nullable=False)
+    nombre = Column(String(150), nullable=False)
+    descripcion = Column(Text, nullable=True)
+    estado = Column(String(20), nullable=False, default="BORRADOR")
+    precio_total = Column(Numeric(12, 2), nullable=False, default=0.0)
+    es_publica = Column(Boolean, nullable=False, default=False)
+    fecha_creacion = Column(DateTime, nullable=False, default=datetime.utcnow)
+    fecha_modificacion = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    usuario = relationship("Usuario", back_populates="configuraciones")
+    componentes_agregados = relationship("ConfiguracionComponente", back_populates="configuracion", cascade="all, delete-orphan")
+    resultados_compatibilidad = relationship("ResultadoCompatibilidad", back_populates="configuracion", cascade="all, delete-orphan")
 
     @property
     def consumo_total_watts(self) -> int:
-        return sum(item.componente.consumo_watts * item.cantidad for item in self.componentes_agregados)
+        """Calcula dinámicamente el consumo total sumando el consumo individual de cada pieza."""
+        total = 0
+        for item in self.componentes_agregados:
+            if item.componente and item.componente.consumo_watts:
+                total += item.componente.consumo_watts * item.cantidad
+        return total
 
-    def cambiar_estado(self, nuevo_estado: str):
-        estados_validos = ["BORRADOR", "COMPLETA", "INCOMPATIBLE", "FINALIZADA"]
-        if nuevo_estado in estados_validos:
-            self.estado = nuevo_estado
-            self.fecha_modificacion = datetime.now()
-        else:
-            raise ValueError(f"Estado '{nuevo_estado}' no válido para la configuración.")
 
-    def __str__(self):
-        return f"PC: '{self.nombre}' | Usuario: {self.usuario.nombre} | Estado: {self.estado} | Total: ${self.precio_total}"
+class ConfiguracionComponente(Base):
+    __tablename__ = "configuracion_componentes"
+
+    id_configuracion_componente = Column(BigInteger, primary_key=True, index=True)
+    id_configuracion = Column(BigInteger, ForeignKey("configuraciones_pc.id_configuracion", ondelete="CASCADE"), nullable=False)
+    id_componente = Column(BigInteger, ForeignKey("componentes.id_componente"), nullable=False)
+    cantidad = Column(Integer, nullable=False, default=1)
+    precio_al_seleccionar = Column(Numeric(12, 2), nullable=False)
+    posicion_x = Column(Numeric(10, 2), nullable=True)
+    posicion_y = Column(Numeric(10, 2), nullable=True)
+    rotacion = Column(Numeric(6, 2), nullable=False, default=0.0)
+    fecha_agregado = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    configuracion = relationship("ConfiguracionPC", back_populates="componentes_agregados")
+    componente = relationship("Componente", back_populates="configuraciones_asociadas")
+
+    __table_args__ = (
+        UniqueConstraint("id_configuracion", "id_componente", name="uq_configuracion_componente"),
+    )
+
+
+class ReglaCompatibilidad(Base):
+    __tablename__ = "reglas_compatibilidad"
+
+    id_regla = Column(BigInteger, primary_key=True, index=True)
+    nombre = Column(String(150), nullable=False)
+    descripcion = Column(Text, nullable=False)
+    codigo = Column(String(100), nullable=False, unique=True)
+    nivel = Column(String(20), nullable=False, default="ERROR")
+    activa = Column(Boolean, nullable=False, default=True)
+
+    resultados = relationship("ResultadoCompatibilidad", back_populates="regla")
+
+
+class ResultadoCompatibilidad(Base):
+    __tablename__ = "resultados_compatibilidad"
+
+    id_resultado = Column(BigInteger, primary_key=True, index=True)
+    id_configuracion = Column(BigInteger, ForeignKey("configuraciones_pc.id_configuracion", ondelete="CASCADE"), nullable=False)
+    id_regla = Column(BigInteger, ForeignKey("reglas_compatibilidad.id_regla"), nullable=False)
+    resultado = Column(String(20), nullable=False)
+    mensaje = Column(Text, nullable=False)
+    fecha_validacion = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    configuracion = relationship("ConfiguracionPC", back_populates="resultados_compatibilidad")
+    regla = relationship("ReglaCompatibilidad", back_populates="resultados")
