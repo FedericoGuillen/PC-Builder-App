@@ -17,9 +17,9 @@ El objetivo de este proyecto es acompañar a usuarios principiantes en la constr
 
 *(Se irán actualizando a medida que avancemos en la arquitectura)*
 
-- **Lenguaje / Framework:**
+- **Lenguaje / Framework:** Python, SQLAlchemy, FastAPI
 - **Base de Datos:** PostgreSQL
-- **Frontend / Interfaz:**
+- **Frontend / Interfaz:** HTML, CSS, JavaScript
 - **Control de Versiones:** Git & GitHub
 
 ---
