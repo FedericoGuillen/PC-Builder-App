@@ -106,6 +106,28 @@ class ConfiguracionPC(Base):
                 total += item.componente.consumo_watts * item.cantidad
         return total
 
+    def agregar_componente(self, componente, cantidad: int = 1):
+        """
+        Agrega un componente a la configuración creando el vínculo intermedio 
+        (ConfiguracionComponente) y actualizando el precio total de la PC.
+        """
+        # Protegemos contra listas no inicializadas en memoria
+        if self.componentes_agregados is None:
+            self.componentes_agregados = []
+            
+        precio = componente.precio_referencia or 0.0
+        
+        # Instanciamos la clase intermedia para respetar la relación muchos a muchos
+        nuevo_item = ConfiguracionComponente(
+            componente=componente,
+            cantidad=cantidad,
+            precio_al_seleccionar=precio
+        )
+        
+        self.componentes_agregados.append(nuevo_item)
+        
+        # Actualizamos el precio total de la configuración
+        self.precio_total = float(self.precio_total or 0.0) + (float(precio) * cantidad)
 
 class ConfiguracionComponente(Base):
     __tablename__ = "configuracion_componentes"
