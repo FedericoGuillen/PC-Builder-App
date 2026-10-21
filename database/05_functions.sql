@@ -161,3 +161,52 @@ BEGIN
     RETURN v_stock;
 END;
 $$;
+
+
+-- 11. Funcion parametrizada consumible desde PerfilRepository.
+CREATE OR REPLACE FUNCTION fn_componentes_por_perfil(
+    p_id_perfil BIGINT,
+    p_id_tipo BIGINT DEFAULT NULL,
+    p_precio_maximo NUMERIC DEFAULT NULL,
+    p_solo_recomendados BOOLEAN DEFAULT TRUE
+)
+RETURNS TABLE (
+    id_componente BIGINT,
+    categoria VARCHAR,
+    marca VARCHAR,
+    nombre VARCHAR,
+    modelo VARCHAR,
+    precio_referencia NUMERIC,
+    stock INTEGER,
+    especificaciones JSONB,
+    afinidad SMALLINT,
+    obligatorio BOOLEAN
+)
+LANGUAGE sql
+STABLE
+AS $$
+    SELECT
+        v.id_componente,
+        v.categoria,
+        v.marca,
+        v.nombre,
+        v.modelo,
+        v.precio_referencia,
+        v.stock,
+        v.especificaciones,
+        v.afinidad,
+        v.obligatorio
+    FROM vw_componentes_por_perfil v
+    WHERE v.id_perfil = p_id_perfil
+      AND (p_id_tipo IS NULL OR v.id_tipo = p_id_tipo)
+      AND (p_precio_maximo IS NULL OR v.precio_referencia <= p_precio_maximo)
+      AND (NOT p_solo_recomendados OR v.recomendado)
+    ORDER BY v.prioridad DESC, v.categoria, v.afinidad DESC,
+             v.precio_referencia NULLS LAST;
+$$;
+
+
+-- Consultas de verificacion:
+-- SELECT * FROM perfiles_uso ORDER BY orden_visual;
+-- SELECT * FROM vw_componentes_por_perfil ORDER BY perfil, categoria, afinidad DESC;
+-- SELECT * FROM fn_componentes_por_perfil(1, NULL, NULL, TRUE);
