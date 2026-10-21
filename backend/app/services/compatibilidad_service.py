@@ -1,50 +1,61 @@
 from typing import List, Dict, Any
 from app.domain.modelos import ConfiguracionPC
-from app.domain.reglas import ReglaCompatibilidadStrategy
+from app.domain.reglas import (
+    ReglaCompatibilidadStrategy,
+    ReglaConsumoFuenteStrategy,
+    ReglaSocketCpuMotherboardStrategy,
+    ReglaRamMotherboardStrategy,
+    ReglaGabineteMotherboardStrategy
+)
 
 class ValidadorCompatibilidadService:
     """
     Servicio de aplicación encargado de orquestar la validación de compatibilidad 
-    sobre una configuración de PC utilizando el conjunto de reglas disponibles.
+    sobre una configuración de PC utilizando el conjunto de reglas disponibles (Patrón Strategy).
     """
-    def __init__(self, reglas: List[ReglaCompatibilidadStrategy]):
-        # Inyección de dependencias: recibe la lista de reglas a evaluar
-        self.reglas = reglas
+    def __init__(self, reglas: List[ReglaCompatibilidadStrategy] = None):
+        if reglas is None:
+            # Carga por defecto las 4 reglas del sistema
+            self.reglas = [
+                ReglaConsumoFuenteStrategy(),
+                ReglaSocketCpuMotherboardStrategy(),
+                ReglaRamMotherboardStrategy(),
+                ReglaGabineteMotherboardStrategy()
+            ]
+        else:
+            self.reglas = reglas
 
-    def validar_configuracion(self, configuracion: ConfiguracionPC) -> List[Dict[str, Any]]:
+    def validar_configuracion(self, configuracion: ConfiguracionPC) -> Dict[str, Any]:
         """
-        Ejecuta todas las reglas configuradas sobre la PC y recopila los resultados o advertencias.
+        Ejecuta todas las reglas configuradas sobre la PC.
+        Devuelve el estado general y la lista explicativa de incompatibilidades.
         """
-        resultados_validacion = []
+        incompatibilidades: List[str] = []
+        detalles: List[Dict[str, Any]] = []
 
         for regla in self.reglas:
             if not regla.activa:
-                continue  # Si la regla está desactivada en el sistema, la saltamos
-                
-            # Evaluamos la regla con la lógica del dominio (Patrón Strategy)
+                continue
+
             resultado = regla.evaluar(configuracion)
-            
+
             if resultado:
-                # Si la regla devuelve un dict, significa que encontró un conflicto o advertencia
-                resultado_con_metadatos = {
+                mensaje = resultado.get("mensaje", "")
+                incompatibilidades.append(mensaje)
+                
+                detalles.append({
                     "id_regla": regla.id_regla,
                     "codigo_regla": regla.codigo,
                     "nombre_regla": regla.nombre,
                     "nivel": regla.nivel,
                     "resultado": resultado.get("resultado", "INCOMPATIBLE"),
-                    "mensaje": resultado.get("mensaje")
-                }
-                resultados_validacion.append(resultado_con_metadatos)
+                    "mensaje": mensaje
+                })
 
-        # Si no hubo ningún error/advertencia, podemos devolver un estado global compatible
-        if not resultados_validacion:
-            resultados_validacion.append({
-                "id_regla": 0,
-                "codigo_regla": "GENERAL_OK",
-                "nombre_regla": "Compatibilidad General",
-                "nivel": "INFO",
-                "resultado": "COMPATIBLE",
-                "mensaje": "Todos los componentes seleccionados son compatibles entre sí."
-            })
+        es_compatible = len(incompatibilidades) == 0
 
-        return resultados_validacion
+        return {
+            "es_compatible": es_compatible,
+            "incompatibilidades": incompatibilidades,
+            "detalles": detalles
+        }

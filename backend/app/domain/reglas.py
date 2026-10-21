@@ -7,7 +7,7 @@ class ReglaCompatibilidadStrategy(ABC):
     Interfaz abstracta (Patrón Strategy) para todas las reglas de compatibilidad del sistema.
     Cada regla concreta debe implementar el método 'evaluar'.
     """
-    def __init__(self, id_regla: int, nombre: str, descripcion: str, codigo: str, nivel: str = "ERROR"):
+    def __init__(self, id_regla: int = 0, nombre: str = "Regla Genérica", descripcion: str = "", codigo: str = "GENERIC", nivel: str = "ERROR"):
         self.id_regla = id_regla
         self.nombre = nombre
         self.descripcion = descripcion
@@ -17,11 +17,6 @@ class ReglaCompatibilidadStrategy(ABC):
 
     @abstractmethod
     def evaluar(self, configuracion: ConfiguracionPC) -> Optional[Dict[str, Any]]:
-        """
-        Evalúa la configuración de la PC según la regla de negocio.
-        Retorna un diccionario con el resultado ('COMPATIBLE', 'ADVERTENCIA', 'INCOMPATIBLE') 
-        y un mensaje explicativo, o None si la regla pasa sin problemas.
-        """
         pass
 
 
@@ -89,4 +84,84 @@ class ReglaSocketCpuMotherboardStrategy(ReglaCompatibilidadStrategy):
                 "mensaje": f"Incompatibilidad de socket: El procesador requiere socket '{socket_cpu}' pero la placa madre tiene socket '{socket_mother}'."
             }
             
+        return None
+
+class ReglaRamMotherboardStrategy(ReglaCompatibilidadStrategy):
+    """
+    Verifica que la tecnología de la memoria RAM (DDR4, DDR5, etc.) coincida con la placa madre.
+    """
+    def __init__(self):
+        super().__init__(
+            id_regla=3,
+            nombre="RAM y Placa Madre",
+            descripcion="Valida tecnología de RAM soportada por la Placa Madre",
+            codigo="COMP_RAM_MOTHER"
+        )
+
+    def evaluar(self, configuracion: ConfiguracionPC) -> Optional[Dict[str, Any]]:
+        motherboard = next(
+            (item.componente for item in configuracion.componentes_agregados 
+             if item.componente and item.componente.tipo and item.componente.tipo.nombre.lower() in ["placa madre", "motherboard", "mainboard"]), 
+            None
+        )
+        rams = [
+            item.componente for item in configuracion.componentes_agregados 
+            if item.componente and item.componente.tipo and item.componente.tipo.nombre.lower() in ["memoria ram", "ram", "memoria"]
+        ]
+
+        if not motherboard or not rams:
+            return None
+
+        tipo_ram_mother = motherboard.especificaciones.get("tipo_ram")
+
+        for ram in rams:
+            tipo_ram = ram.especificaciones.get("tipo_ram")
+            if tipo_ram_mother and tipo_ram and str(tipo_ram).upper() != str(tipo_ram_mother).upper():
+                return {
+                    "resultado": "INCOMPATIBLE",
+                    "nivel": self.nivel,
+                    "mensaje": f"La memoria RAM '{ram.nombre}' ({tipo_ram}) no es compatible con la placa madre '{motherboard.nombre}' (soporta {tipo_ram_mother})."
+                }
+
+        return None
+
+class ReglaGabineteMotherboardStrategy(ReglaCompatibilidadStrategy):
+    """
+    Verifica que el factor de forma de la placa madre entre en el gabinete.
+    """
+    def __init__(self):
+        super().__init__(
+            id_regla=4,
+            nombre="Gabinete y Placa Madre",
+            descripcion="Valida factor de forma de la Placa Madre contra los soportados por el Gabinete",
+            codigo="COMP_GABINETE_MOTHER"
+        )
+
+    def evaluar(self, configuracion: ConfiguracionPC) -> Optional[Dict[str, Any]]:
+        motherboard = next(
+            (item.componente for item in configuracion.componentes_agregados 
+             if item.componente and item.componente.tipo and item.componente.tipo.nombre.lower() in ["placa madre", "motherboard", "mainboard"]), 
+            None
+        )
+        gabinete = next(
+            (item.componente for item in configuracion.componentes_agregados 
+             if item.componente and item.componente.tipo and item.componente.tipo.nombre.lower() in ["gabinete", "case", "torre"]), 
+            None
+        )
+
+        if not motherboard or not gabinete:
+            return None
+
+        factor_mother = motherboard.especificaciones.get("factor_forma")
+        factores_soportados = gabinete.especificaciones.get("factores_forma_soportados", [])
+
+        if factor_mother and factores_soportados:
+            soportados_upper = [str(f).upper() for f in factores_soportados]
+            if str(factor_mother).upper() not in soportados_upper:
+                return {
+                    "resultado": "INCOMPATIBLE",
+                    "nivel": self.nivel,
+                    "mensaje": f"La placa madre '{motherboard.nombre}' ({factor_mother}) no es compatible con el gabinete '{gabinete.nombre}' (soporta: {', '.join(factores_soportados)})."
+                }
+
         return None
