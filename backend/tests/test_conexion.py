@@ -1,31 +1,39 @@
-import pytest
-import os
 import importlib
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # Importamos el módulo de conexión
 from app.database import conexion
 
+
 def test_conexion_faltan_variables():
     """Verifica que el módulo lance RuntimeError si faltan credenciales obligatorias."""
     
-    # patch.dict limpia temporalmente las variables de entorno para este test
-    with patch.dict(os.environ, {}, clear=True):
-        # Aseguramos que DB_USER y DB_PASSWORD devuelvan None
-        os.environ.pop("DB_USER", None)
-        os.environ.pop("DB_PASSWORD", None)
+    # Interceptamos directamente la función os.getenv y load_dotenv dentro de tu archivo
+    with patch("app.database.conexion.os.getenv") as mock_getenv, \
+         patch("app.database.conexion.load_dotenv"):
+         
+        # Creamos un comportamiento falso: si pide USER o PASSWORD, forzamos que reciba None.
+        # Para cualquier otra variable (como DB_HOST o PORT), le devolvemos su valor por defecto.
+        def getenv_falso(key, default=None):
+            if key in ["DB_USER", "DB_PASSWORD"]:
+                return None
+            return default
+            
+        mock_getenv.side_effect = getenv_falso
         
+        # Ahora sí, al recargar el archivo, os.getenv devolverá None y debe explotar
         with pytest.raises(RuntimeError) as exc_info:
-            # Recargamos el módulo para forzar a que el código global vuelva a ejecutarse
             importlib.reload(conexion)
         
-        # Validamos que el mensaje de error sea el correcto
+        # Validamos que el mensaje de error sea el esperado
         assert "Faltan variables de entorno requeridas" in str(exc_info.value)
         assert "DB_USER" in str(exc_info.value)
         assert "DB_PASSWORD" in str(exc_info.value)
-        
-    # IMPORTANTE: Volvemos a recargar el módulo ya sin el "patch" para que recupere
-    # tu .env real y no rompa los demás tests que se ejecuten después de este.
+
+    # Al salir del bloque 'with', la trampa desaparece y os.getenv vuelve a la normalidad.
+    # Recargamos el módulo una última vez para que recupere tu .env real.
     importlib.reload(conexion)
 
 
