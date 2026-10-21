@@ -1,206 +1,315 @@
-
 """
-Repositorio de consultas de componentes y tipos de componente.
+Repositorio de componentes.
 
-Este módulo centraliza el acceso a PostgreSQL mediante SQLAlchemy.
-Las consultas no deben colocarse en main.py ni en la interfaz gráfica.
+Centraliza las consultas de componentes y categorías realizadas
+sobre PostgreSQL mediante SQLAlchemy.
 """
 
-from sqlalchemy import Integer, cast, select
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.database.conexion import SessionLocal
-from app.domain.modelos import Componente, TipoComponente
 
 
 class ComponenteRepository:
-    """Repositorio para consultar componentes almacenados en PostgreSQL."""
+    """Repositorio de acceso a componentes y tipos de componente."""
 
     def obtener_todos(self):
-        """Obtiene todos los componentes."""
+        """Obtiene todos los componentes activos."""
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(Componente)
-                    .order_by(Componente.id_componente)
-                )
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.id_tipo,
+                c.id_marca,
+                c.nombre,
+                c.modelo,
+                c.descripcion,
+                c.consumo_watts,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                c.imagen_url,
+                c.activo,
+                t.nombre AS categoria,
+                m.nombre AS marca
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE c.activo = TRUE
+            ORDER BY t.nombre, c.nombre, c.modelo
+        """)
 
-                return list(db.scalars(consulta).all())
-
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                "No se pudieron obtener los componentes."
-            ) from error
+        return self._obtener_varios(
+            consulta,
+            {},
+            "No se pudieron obtener los componentes.",
+        )
 
     def obtener_categorias(self):
-        """
-        Obtiene todos los tipos de componente.
+        """Obtiene todas las categorías de componentes."""
 
-        En el modelo actual, TipoComponente representa las categorías
-        disponibles, como procesador, memoria, placa madre o gabinete.
-        """
+        consulta = text("""
+            SELECT
+                id_tipo,
+                nombre,
+                descripcion,
+                cantidad_maxima_sugerida,
+                obligatorio
+            FROM tipos_componente
+            ORDER BY nombre
+        """)
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(TipoComponente)
-                    .order_by(TipoComponente.nombre)
-                )
-
-                return list(db.scalars(consulta).all())
-
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                "No se pudieron obtener las categorías."
-            ) from error
+        return self._obtener_varios(
+            consulta,
+            {},
+            "No se pudieron obtener las categorías.",
+        )
 
     def obtener_por_categoria(self, id_tipo: int):
-        """Obtiene los componentes correspondientes a un tipo."""
+        """Obtiene los componentes activos de una categoría."""
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(Componente)
-                    .where(Componente.id_tipo == id_tipo)
-                    .order_by(Componente.nombre)
-                )
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.id_tipo,
+                c.id_marca,
+                c.nombre,
+                c.modelo,
+                c.descripcion,
+                c.consumo_watts,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                c.imagen_url,
+                t.nombre AS categoria,
+                m.nombre AS marca
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE c.id_tipo = :id_tipo
+              AND c.activo = TRUE
+            ORDER BY c.nombre, c.modelo
+        """)
 
-                return list(db.scalars(consulta).all())
-
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                f"No se pudieron obtener los componentes del tipo {id_tipo}."
-            ) from error
+        return self._obtener_varios(
+            consulta,
+            {"id_tipo": id_tipo},
+            f"No se pudieron obtener los componentes del tipo {id_tipo}.",
+        )
 
     def obtener_por_id(self, id_componente: int):
-        """Obtiene un componente mediante su identificador."""
+        """Obtiene un componente activo mediante su identificador."""
 
-        try:
-            with SessionLocal() as db:
-                return db.get(Componente, id_componente)
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.id_tipo,
+                c.id_marca,
+                c.nombre,
+                c.modelo,
+                c.descripcion,
+                c.consumo_watts,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                c.imagen_url,
+                c.activo,
+                c.fecha_creacion,
+                t.nombre AS categoria,
+                m.nombre AS marca
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE c.id_componente = :id_componente
+              AND c.activo = TRUE
+        """)
 
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                f"No se pudo obtener el componente {id_componente}."
-            ) from error
+        return self._obtener_uno(
+            consulta,
+            {"id_componente": id_componente},
+            f"No se pudo obtener el componente {id_componente}.",
+        )
+
+    def obtener_por_perfil(self, id_perfil: int):
+        """
+        Obtiene los componentes asociados a un perfil.
+
+        Los resultados se ordenan primero por recomendación y luego
+        por afinidad, desde el valor más alto al más bajo.
+        """
+
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.id_tipo,
+                c.id_marca,
+                c.nombre,
+                c.modelo,
+                c.descripcion,
+                c.consumo_watts,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                c.imagen_url,
+                t.nombre AS categoria,
+                m.nombre AS marca,
+                pc.afinidad,
+                pc.recomendado,
+                pc.observacion
+            FROM perfil_componentes pc
+            INNER JOIN componentes c
+                ON c.id_componente = pc.id_componente
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE pc.id_perfil = :id_perfil
+              AND c.activo = TRUE
+            ORDER BY
+                pc.recomendado DESC,
+                pc.afinidad DESC,
+                t.nombre,
+                c.nombre
+        """)
+
+        return self._obtener_varios(
+            consulta,
+            {"id_perfil": id_perfil},
+            f"No se pudieron obtener los componentes del perfil {id_perfil}.",
+        )
 
     def obtener_placas_madre_por_socket(self, socket: str):
-        """
-        Obtiene placas madre que tengan el socket solicitado.
+        """Obtiene motherboards compatibles con un socket."""
 
-        El socket se consulta dentro del campo JSON especificaciones.
-        """
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.nombre,
+                c.modelo,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                m.nombre AS marca
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE t.nombre = 'MOTHERBOARD'
+              AND c.especificaciones ->> 'socket' = :socket
+              AND c.activo = TRUE
+            ORDER BY c.precio_referencia, c.nombre
+        """)
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(Componente)
-                    .join(
-                        TipoComponente,
-                        Componente.id_tipo == TipoComponente.id_tipo,
-                    )
-                    .where(
-                        TipoComponente.nombre.ilike("%placa%"),
-                        Componente.especificaciones["socket"].astext == socket,
-                    )
-                    .order_by(Componente.nombre)
-                )
-
-                return list(db.scalars(consulta).all())
-
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                "No se pudieron obtener las placas madre por socket."
-            ) from error
+        return self._obtener_varios(
+            consulta,
+            {"socket": socket},
+            f"No se pudieron obtener placas madre para el socket {socket}.",
+        )
 
     def obtener_memorias_por_tipo(self, tipo_memoria: str):
-        """
-        Obtiene memorias RAM según el tipo indicado.
+        """Obtiene memorias RAM según el tipo indicado, por ejemplo DDR5."""
 
-        Ejemplos de tipo de memoria: DDR4 o DDR5.
-        """
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.nombre,
+                c.modelo,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                m.nombre AS marca
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE t.nombre = 'RAM'
+              AND c.especificaciones ->> 'tipo' = :tipo_memoria
+              AND c.activo = TRUE
+            ORDER BY
+                (c.especificaciones ->> 'capacidad_gb')::INTEGER,
+                (c.especificaciones ->> 'velocidad_mhz')::INTEGER,
+                c.nombre
+        """)
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(Componente)
-                    .join(
-                        TipoComponente,
-                        Componente.id_tipo == TipoComponente.id_tipo,
-                    )
-                    .where(
-                        TipoComponente.nombre.ilike("%memoria%"),
-                        Componente.especificaciones[
-                            "tipo_memoria"
-                        ].astext == tipo_memoria,
-                    )
-                    .order_by(Componente.nombre)
-                )
-
-                return list(db.scalars(consulta).all())
-
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                "No se pudieron obtener las memorias por tipo."
-            ) from error
+        return self._obtener_varios(
+            consulta,
+            {"tipo_memoria": tipo_memoria},
+            f"No se pudieron obtener memorias de tipo {tipo_memoria}.",
+        )
 
     def obtener_gabinetes_por_factor_forma(self, factor_forma: str):
-        """Obtiene gabinetes según su factor de forma."""
+        """
+        Obtiene gabinetes compatibles con un factor de forma.
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(Componente)
-                    .join(
-                        TipoComponente,
-                        Componente.id_tipo == TipoComponente.id_tipo,
-                    )
-                    .where(
-                        TipoComponente.nombre.ilike("%gabinete%"),
-                        Componente.especificaciones[
-                            "factor_forma"
-                        ].astext == factor_forma,
-                    )
-                    .order_by(Componente.nombre)
-                )
+        El campo form_factor es un arreglo JSON, por ejemplo:
+        ["ATX", "Micro-ATX", "Mini-ITX"].
+        """
 
-                return list(db.scalars(consulta).all())
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.nombre,
+                c.modelo,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                m.nombre AS marca
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE t.nombre = 'CASE'
+              AND EXISTS (
+                  SELECT 1
+                  FROM jsonb_array_elements_text(
+                      c.especificaciones -> 'form_factor'
+                  ) AS formato(valor)
+                  WHERE formato.valor = :factor_forma
+              )
+              AND c.activo = TRUE
+            ORDER BY c.precio_referencia, c.nombre
+        """)
 
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                "No se pudieron obtener los gabinetes por factor de forma."
-            ) from error
+        return self._obtener_varios(
+            consulta,
+            {"factor_forma": factor_forma},
+            (
+                "No se pudieron obtener gabinetes para el factor "
+                f"de forma {factor_forma}."
+            ),
+        )
 
     def obtener_fuentes_por_potencia_minima(self, potencia_minima: int):
-        """Obtiene fuentes con una potencia igual o superior a la indicada."""
+        """Obtiene fuentes con potencia igual o superior a la solicitada."""
 
-        try:
-            with SessionLocal() as db:
-                consulta = (
-                    select(Componente)
-                    .join(
-                        TipoComponente,
-                        Componente.id_tipo == TipoComponente.id_tipo,
-                    )
-                    .where(
-                        TipoComponente.nombre.ilike("%fuente%"),
-                        cast(
-                            Componente.especificaciones["potencia"].astext,
-                            Integer,
-                        ) >= potencia_minima,
-                    )
-                    .order_by(
-                        cast(
-                            Componente.especificaciones["potencia"].astext,
-                            Integer,
-                        )
-                    )
-                )
-
-                return list(db.scalars(consulta).all())
-
-        except SQLAlchemyError as error:
-            raise RuntimeError(
-                "No se pudieron obtener las fuentes por potencia mínima."
-            ) from error
+        consulta = text("""
+            SELECT
+                c.id_componente,
+                c.nombre,
+                c.modelo,
+                c.precio_referencia,
+                c.stock,
+                c.especificaciones,
+                m.nombre AS marca,
+                (c.especificaciones ->> 'potencia_w')::INTEGER AS potencia_w
+            FROM componentes c
+            INNER JOIN tipos_componente t
+                ON t.id_tipo = c.id_tipo
+            INNER JOIN marcas m
+                ON m.id_marca = c.id_marca
+            WHERE t.nombre = 'PSU'
+              AND (c.especificaciones ->> 'potencia_w')::INTEGER
+                    >= :potencia_minima
+              AND c.activo = TRUE
+            ORDER BY
+                (c.especificaciones
