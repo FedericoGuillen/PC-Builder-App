@@ -52,8 +52,9 @@ def test_obtener_componente_por_id(mock_session_local):
     assert componente["nombre"] == "RTX 4060"
     
     # Verificamos que el parámetro se haya inyectado correctamente en la consulta
+    # db.execute(consulta, parametros) -> args[0] es consulta, args[1] son los parametros
     args, kwargs = mock_db.execute.call_args
-    assert kwargs == {"id_componente": 10}
+    assert args[1] == {"id_componente": 10}
 
 
 @patch("app.repositories.componente_repository.SessionLocal")
