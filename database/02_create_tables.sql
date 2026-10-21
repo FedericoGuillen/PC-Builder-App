@@ -134,7 +134,7 @@ CREATE TABLE configuracion_componentes (
 );
 
 
---/) Creo la tabla "reglas_compatibilidad": es una solución más escalable. En lugar de comparar productos específicos, comparan sus características.
+--7) Creo la tabla "reglas_compatibilidad": es una solución más escalable. En lugar de comparar productos específicos, comparan sus características.
 CREATE TABLE reglas_compatibilidad (
 id_regla BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 nombre VARCHAR(150) NOT NULL,
@@ -147,8 +147,80 @@ CONSTRAINT chk_nivel_regla
 CHECK (nivel IN ('INFO', 'ADVERTENCIA', 'ERROR'))
 );
 
+-- 8.) Perfiles funcionales mostrados en la pantalla inicial.
+CREATE TABLE IF NOT EXISTS perfiles_uso (
+    id_perfil BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    codigo VARCHAR(50) NOT NULL UNIQUE,
+    nombre VARCHAR(120) NOT NULL UNIQUE,
+    descripcion TEXT NOT NULL,
+    texto_destacado VARCHAR(120),
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    orden_visual INTEGER NOT NULL DEFAULT 0,
+    CONSTRAINT chk_perfil_orden CHECK (orden_visual >= 0)
+);
 
---8) Creo la tabla "resultados_compatibilidad": esta tabla permite mostrarle al usuario los problemas detectados.
+-- 9) Define que categorias necesita cada perfil y cuanto pesan al recomendar.
+CREATE TABLE IF NOT EXISTS perfil_tipos_componente (
+    id_perfil BIGINT NOT NULL,
+    id_tipo BIGINT NOT NULL,
+    obligatorio BOOLEAN NOT NULL DEFAULT FALSE,
+    prioridad SMALLINT NOT NULL DEFAULT 3,
+    cantidad_sugerida INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_perfil, id_tipo),
+    CONSTRAINT fk_ptc_perfil FOREIGN KEY (id_perfil)
+        REFERENCES perfiles_uso(id_perfil) ON DELETE CASCADE,
+    CONSTRAINT fk_ptc_tipo FOREIGN KEY (id_tipo)
+        REFERENCES tipos_componente(id_tipo),
+    CONSTRAINT chk_ptc_prioridad CHECK (prioridad BETWEEN 1 AND 5),
+    CONSTRAINT chk_ptc_cantidad CHECK (cantidad_sugerida > 0)
+);
+
+
+-- 10) Vincula componentes concretos con perfiles. La afinidad permite ordenarlos.
+CREATE TABLE IF NOT EXISTS perfil_componentes (
+    id_perfil BIGINT NOT NULL,
+    id_componente BIGINT NOT NULL,
+    afinidad SMALLINT NOT NULL DEFAULT 3,
+    recomendado BOOLEAN NOT NULL DEFAULT TRUE,
+    observacion TEXT,
+    PRIMARY KEY (id_perfil, id_componente),
+    CONSTRAINT fk_pc_perfil FOREIGN KEY (id_perfil)
+        REFERENCES perfiles_uso(id_perfil) ON DELETE CASCADE,
+    CONSTRAINT fk_pc_componente FOREIGN KEY (id_componente)
+        REFERENCES componentes(id_componente) ON DELETE CASCADE,
+    CONSTRAINT chk_pc_afinidad CHECK (afinidad BETWEEN 1 AND 5)
+);
+
+
+-- 11) Presupuesto opcional ingresado por el usuario para una configuracion.
+ALTER TABLE configuraciones_pc
+    ADD COLUMN IF NOT EXISTS id_perfil BIGINT,
+    ADD COLUMN IF NOT EXISTS presupuesto_objetivo NUMERIC(12,2);
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'fk_configuracion_perfil'
+    ) THEN
+        ALTER TABLE configuraciones_pc
+            ADD CONSTRAINT fk_configuracion_perfil
+            FOREIGN KEY (id_perfil) REFERENCES perfiles_uso(id_perfil);
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'chk_presupuesto_objetivo'
+    ) THEN
+        ALTER TABLE configuraciones_pc
+            ADD CONSTRAINT chk_presupuesto_objetivo
+            CHECK (presupuesto_objetivo IS NULL OR presupuesto_objetivo > 0);
+    END IF;
+END $$;
+
+
+
+--12) Creo la tabla "resultados_compatibilidad": esta tabla permite mostrarle al usuario los problemas detectados.
 CREATE TABLE resultados_compatibilidad (
 id_resultado BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 id_configuracion BIGINT NOT NULL,
@@ -175,9 +247,9 @@ CHECK (resultado IN (
 );
 
 
----- CONVIENE CREAR SOLO HASTA LA NUMERO 8, resultados_compatibilidad, para no complicar demasiado al proyecto.
+---- CONVIENE CREAR SOLO HASTA LA NUMERO 12, para no complicar demasiado al proyecto.
 
---9) Creo la tabla "tiendas": para almacenar precios de distintas tiendas.
+--13) Creo la tabla "tiendas": para almacenar precios de distintas tiendas.
 CREATE TABLE tiendas (
 id_tienda BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 nombre VARCHAR(150) NOT NULL UNIQUE,
@@ -186,7 +258,7 @@ activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 
---10) Creo la tabla precios_componentes: esto nos permite comparar tiendas, mostrar disponibilidad, encontrar el precio mas bajo
+--14) Creo la tabla precios_componentes: esto nos permite comparar tiendas, mostrar disponibilidad, encontrar el precio mas bajo
 -- guardar precios historicos, calcular el total de una configuracion.
 CREATE TABLE precios_componentes (
 id_precio BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
