@@ -797,6 +797,100 @@ VALUES
     'ADVERTENCIA'
 );
 
+
+
+-- A). Carga idempotente de los tres perfiles visibles en la UI.
+INSERT INTO perfiles_uso
+    (codigo, nombre, descripcion, texto_destacado, orden_visual)
+VALUES
+    ('GAMING_STREAMING', 'Gaming & Streaming',
+     'Jugabilidad fluida y transmision en vivo sin perder fotogramas.',
+     'Rendimiento enfocado en placa de video', 1),
+    ('DISENO_EDICION', 'Diseno Grafico y Edicion de Video',
+     'Crea, renderiza y edita proyectos visuales de alta complejidad.',
+     'Potencia creativa', 2),
+    ('OFICINA_HOGAR', 'Oficina y uso hogareno',
+     'Tareas diarias, navegacion y multitarea con velocidad confiable.',
+     'Esenciales del dia a dia', 3)
+ON CONFLICT (codigo) DO UPDATE SET
+    nombre = EXCLUDED.nombre,
+    descripcion = EXCLUDED.descripcion,
+    texto_destacado = EXCLUDED.texto_destacado,
+    orden_visual = EXCLUDED.orden_visual,
+    activo = TRUE;
+
+-- B. Categorias necesarias por perfil.
+INSERT INTO perfil_tipos_componente
+    (id_perfil, id_tipo, obligatorio, prioridad, cantidad_sugerida)
+SELECT p.id_perfil, t.id_tipo, x.obligatorio, x.prioridad, x.cantidad
+FROM (VALUES
+    ('GAMING_STREAMING','CPU',TRUE,5,1),
+    ('GAMING_STREAMING','CPU_COOLER',FALSE,3,1),
+    ('GAMING_STREAMING','MOTHERBOARD',TRUE,5,1),
+    ('GAMING_STREAMING','RAM',TRUE,4,1),
+    ('GAMING_STREAMING','STORAGE',TRUE,4,1),
+    ('GAMING_STREAMING','GPU',TRUE,5,1),
+    ('GAMING_STREAMING','PSU',TRUE,5,1),
+    ('GAMING_STREAMING','CASE',TRUE,3,1),
+    ('DISENO_EDICION','CPU',TRUE,5,1),
+    ('DISENO_EDICION','CPU_COOLER',FALSE,4,1),
+    ('DISENO_EDICION','MOTHERBOARD',TRUE,5,1),
+    ('DISENO_EDICION','RAM',TRUE,5,1),
+    ('DISENO_EDICION','STORAGE',TRUE,5,1),
+    ('DISENO_EDICION','GPU',TRUE,5,1),
+    ('DISENO_EDICION','PSU',TRUE,4,1),
+    ('DISENO_EDICION','CASE',TRUE,3,1),
+    ('OFICINA_HOGAR','CPU',TRUE,5,1),
+    ('OFICINA_HOGAR','MOTHERBOARD',TRUE,5,1),
+    ('OFICINA_HOGAR','RAM',TRUE,4,1),
+    ('OFICINA_HOGAR','STORAGE',TRUE,4,1),
+    ('OFICINA_HOGAR','GPU',FALSE,1,1),
+    ('OFICINA_HOGAR','PSU',TRUE,3,1),
+    ('OFICINA_HOGAR','CASE',TRUE,3,1)
+) AS x(codigo_perfil, codigo_tipo, obligatorio, prioridad, cantidad)
+JOIN perfiles_uso p ON p.codigo = x.codigo_perfil
+JOIN tipos_componente t ON t.nombre = x.codigo_tipo
+ON CONFLICT (id_perfil, id_tipo) DO UPDATE SET
+    obligatorio = EXCLUDED.obligatorio,
+    prioridad = EXCLUDED.prioridad,
+    cantidad_sugerida = EXCLUDED.cantidad_sugerida;
+
+-- C. Reglas iniciales de afinidad basadas en el catalogo actual.
+-- No usa IDs fijos: identifica productos mediante categoria y modelo.
+INSERT INTO perfil_componentes
+    (id_perfil, id_componente, afinidad, recomendado, observacion)
+SELECT p.id_perfil, c.id_componente,
+       CASE
+         WHEN p.codigo = 'GAMING_STREAMING' AND t.nombre = 'GPU' THEN
+              CASE WHEN c.modelo ILIKE '%4070%' THEN 5 WHEN c.modelo ILIKE '%4060%' THEN 4 ELSE 3 END
+         WHEN p.codigo = 'DISENO_EDICION' AND t.nombre = 'RAM' THEN
+              CASE WHEN (c.especificaciones->>'capacidad_gb')::int >= 64 THEN 5 ELSE 3 END
+         WHEN p.codigo = 'DISENO_EDICION' AND t.nombre = 'GPU' THEN
+              CASE WHEN COALESCE((c.especificaciones->>'vram_gb')::int,0) >= 12 THEN 5 ELSE 3 END
+         WHEN p.codigo = 'OFICINA_HOGAR' AND t.nombre = 'GPU' THEN 1
+         WHEN p.codigo = 'OFICINA_HOGAR' AND t.nombre = 'CPU' AND c.modelo IN ('7600','14600K') THEN 5
+         ELSE 4
+       END AS afinidad,
+       CASE
+         WHEN p.codigo = 'OFICINA_HOGAR' AND t.nombre = 'GPU' THEN FALSE
+         ELSE TRUE
+       END AS recomendado,
+       CASE
+         WHEN p.codigo = 'OFICINA_HOGAR' AND t.nombre = 'GPU'
+           THEN 'Opcional: los procesadores cargados poseen grafica integrada.'
+         ELSE NULL
+       END
+FROM perfiles_uso p
+JOIN perfil_tipos_componente pt ON pt.id_perfil = p.id_perfil
+JOIN tipos_componente t ON t.id_tipo = pt.id_tipo
+JOIN componentes c ON c.id_tipo = t.id_tipo AND c.activo = TRUE
+ON CONFLICT (id_perfil, id_componente) DO UPDATE SET
+    afinidad = EXCLUDED.afinidad,
+    recomendado = EXCLUDED.recomendado,
+    observacion = EXCLUDED.observacion;
+
+	
+
 -- Inserto datos en la tabla tiendas
 INSERT INTO tiendas (
     nombre,
