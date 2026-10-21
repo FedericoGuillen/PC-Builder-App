@@ -1,5 +1,5 @@
 import pytest
-from app.domain.modelos import ConfiguracionPC, Componente, TipoComponente, ConfiguracionComponente
+from app.domain.modelos import ConfiguracionPC, Componente, TipoComponente
 from app.services.compatibilidad_service import ValidadorCompatibilidadService
 
 @pytest.fixture
@@ -21,16 +21,13 @@ def test_configuracion_compatible(validador):
     gabinete = Componente(nombre="Gabinete ATX", tipo=tipo_gab, consumo_watts=0, especificaciones={"factores_forma_soportados": ["ATX", "Micro-ATX"]})
     fuente = Componente(nombre="Fuente 600W", tipo=tipo_fuente, consumo_watts=0, especificaciones={"watts": 600})
 
-    config = ConfiguracionPC(
-        nombre="PC Test Compatible",
-        componentes_agregados=[
-            ConfiguracionComponente(componente=cpu, cantidad=1),
-            ConfiguracionComponente(componente=mother, cantidad=1),
-            ConfiguracionComponente(componente=ram, cantidad=1),
-            ConfiguracionComponente(componente=gabinete, cantidad=1),
-            ConfiguracionComponente(componente=fuente, cantidad=1)
-        ]
-    )
+    # Instanciamos la PC y usamos el método oficial de tu dominio para agregar piezas
+    config = ConfiguracionPC(nombre="PC Test Compatible")
+    config.agregar_componente(cpu)
+    config.agregar_componente(mother)
+    config.agregar_componente(ram)
+    config.agregar_componente(gabinete)
+    config.agregar_componente(fuente)
 
     resultado = validador.validar_configuracion(config)
 
@@ -44,16 +41,13 @@ def test_configuracion_incompatible(validador):
     mother = Componente(nombre="B650 Motherboard", tipo=tipo_mother, consumo_watts=30, especificaciones={"socket": "AM5", "tipo_ram": "DDR4", "factor_forma": "ATX"})
     fuente = Componente(nombre="Fuente 100W", tipo=tipo_fuente, consumo_watts=0, especificaciones={"watts": 100})
 
-    config = ConfiguracionPC(
-        nombre="PC Test Incompatible",
-        componentes_agregados=[
-            ConfiguracionComponente(componente=cpu, cantidad=1),
-            ConfiguracionComponente(componente=mother, cantidad=1),
-            ConfiguracionComponente(componente=fuente, cantidad=1)
-        ]
-    )
+    config = ConfiguracionPC(nombre="PC Test Incompatible")
+    config.agregar_componente(cpu)
+    config.agregar_componente(mother)
+    config.agregar_componente(fuente)
 
     resultado = validador.validar_configuracion(config)
 
     assert resultado["es_compatible"] is False
+    # Validamos que se detecten múltiples errores simultáneos
     assert len(resultado["incompatibilidades"]) > 0
