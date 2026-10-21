@@ -8,22 +8,46 @@ Descripción: Vistas que simplifican las consultas frecuentes del sistema de
 */
 
 -- Vista del catálogo completo
--- 1) Permite hacer SELECT * FROM vw_catalogo_componentes;
-CREATE VIEW vw_catalogo_componentes AS
+-- . Vista plana para el catalogo de la aplicacion.
+CREATE OR REPLACE VIEW vw_catalogo_componentes AS
 SELECT
     c.id_componente,
-    tc.nombre AS tipo,
+    t.id_tipo,
+    t.nombre AS categoria,
+    m.id_marca,
     m.nombre AS marca,
     c.nombre,
     c.modelo,
+    c.descripcion,
+    c.consumo_watts,
     c.precio_referencia,
     c.stock,
-    c.activo
+    c.especificaciones,
+    c.imagen_url
 FROM componentes c
-JOIN tipos_componente tc
-    ON c.id_tipo = tc.id_tipo
-JOIN marcas m
-    ON c.id_marca = m.id_marca;
+JOIN tipos_componente t ON t.id_tipo = c.id_tipo
+JOIN marcas m ON m.id_marca = c.id_marca
+WHERE c.activo = TRUE AND m.activo = TRUE;
+
+-- . Vista de componentes adecuados para cada perfil.
+CREATE OR REPLACE VIEW vw_componentes_por_perfil AS
+SELECT
+    p.id_perfil,
+    p.codigo AS perfil_codigo,
+    p.nombre AS perfil,
+    v.*,
+    pc.afinidad,
+    pc.recomendado,
+    pc.observacion,
+    pt.obligatorio,
+    pt.prioridad,
+    pt.cantidad_sugerida
+FROM perfiles_uso p
+JOIN perfil_componentes pc ON pc.id_perfil = p.id_perfil
+JOIN vw_catalogo_componentes v ON v.id_componente = pc.id_componente
+JOIN perfil_tipos_componente pt
+  ON pt.id_perfil = p.id_perfil AND pt.id_tipo = v.id_tipo
+WHERE p.activo = TRUE;
 
 -- Vista de CPUs
 CREATE VIEW vw_cpus AS
@@ -106,3 +130,5 @@ GROUP BY
     c.id_componente,
     c.nombre,
     c.modelo;
+
+
