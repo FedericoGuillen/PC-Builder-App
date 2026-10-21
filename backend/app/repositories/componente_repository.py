@@ -289,7 +289,7 @@ class ComponenteRepository:
             ),
         )
 
-    def obtener_fuentes_por_potencia_minima(self, potencia_minima: int):
+ def obtener_fuentes_por_potencia_minima(self, potencia_minima: int):
         """Obtiene fuentes con potencia igual o superior a la solicitada."""
 
         consulta = text("""
@@ -308,8 +308,35 @@ class ComponenteRepository:
             INNER JOIN marcas m
                 ON m.id_marca = c.id_marca
             WHERE t.nombre = 'PSU'
-              AND (c.especificaciones ->> 'potencia_w')::INTEGER
-                    >= :potencia_minima
+              AND (c.especificaciones ->> 'potencia_w')::INTEGER >= :potencia_minima
               AND c.activo = TRUE
             ORDER BY
-                (c.especificaciones
+                (c.especificaciones ->> 'potencia_w')::INTEGER,
+                c.precio_referencia,
+                c.nombre
+        """)
+
+        return self._obtener_varios(
+            consulta,
+            {"potencia_minima": potencia_minima},
+            f"No se pudieron obtener fuentes con potencia mínima {potencia_minima}W.",
+        )
+
+    def _obtener_varios(self, consulta, parametros, mensaje_error):
+        """Ejecuta una consulta y devuelve las filas como diccionarios."""
+        try:
+            with SessionLocal() as db:
+                resultado = db.execute(consulta, parametros)
+                return [dict(fila) for fila in resultado.mappings().all()]
+        except SQLAlchemyError as error:
+            raise RuntimeError(mensaje_error) from error
+
+    def _obtener_uno(self, consulta, parametros, mensaje_error):
+        """Ejecuta una consulta y devuelve una fila o None."""
+        try:
+            with SessionLocal() as db:
+                resultado = db.execute(consulta, parametros)
+                fila = resultado.mappings().first()
+                return dict(fila) if fila is not None else None
+        except SQLAlchemyError as error:
+            raise RuntimeError(mensaje_error) from error
