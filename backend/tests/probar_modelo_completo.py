@@ -1,9 +1,17 @@
 """
-Módulo de prueba completo para verificar conexión, lectura y escritura en PostgreSQL
-para el modelo relacional central del proyecto  (Tablas 1 a 8).
+Prueba manual de integración del modelo ORM con PostgreSQL.
+
+Este script inserta información temporal, verifica relaciones y después
+elimina los registros creados.
+
+No forma parte del inicio normal de la aplicación.
 """
 
-from app.database.conexion import engine, SessionLocal
+from uuid import uuid4
+
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.database.conexion import SessionLocal
 from app.domain.modelos import (
     Usuario,
     Marca,
@@ -17,139 +25,146 @@ from app.domain.modelos import (
 
 
 def probar_operaciones_modelo_completo():
-    """Ejecuta inserciones y consultas relacionales en el esquema principal."""
+    """Verifica operaciones de escritura y relaciones del modelo ORM."""
+
     print("\n" + "=" * 65)
-    print(" VERIFICACIÓN DE OPERACIONES EN EL ESQUEMA COMPLETO (TABLAS 1-8)")
+    print(" VERIFICACIÓN DEL MODELO ORM")
     print("=" * 65)
+
+    identificador = uuid4().hex[:8]
 
     db = SessionLocal()
 
     try:
-        # 1. MARCAS Y TIPOS
-        print("\n--- 1. Pruebas en 'marcas' y 'tipos_componente' ---")
-        marca_test = Marca(nombre="Marca Test DDL", sitio_web="https://test.com")
+        # 1. Marca y tipo
+        print("\n--- 1. Marcas y tipos de componente ---")
+
+        marca_test = Marca(
+            nombre=f"Marca Test {identificador}",
+            sitio_web="https://test.com",
+        )
+
         tipo_test = TipoComponente(
-            nombre="Procesador Test",
-            descripcion="CPU de prueba",
+            nombre=f"Procesador Test {identificador}",
+            descripcion="Tipo de componente creado para una prueba manual.",
             obligatorio=True,
         )
 
         db.add_all([marca_test, tipo_test])
-        db.commit()
-        db.refresh(marca_test)
-        db.refresh(tipo_test)
+        db.flush()
+
         print(
-            f"[OK] Marca (ID: {marca_test.id_marca}) y Tipo (ID: {tipo_test.id_tipo}) creados."
+            f"[OK] Marca {marca_test.id_marca} y "
+            f"tipo {tipo_test.id_tipo} creados."
         )
 
-        # 2. COMPONENTES
-        print("\n--- 2. Pruebas en 'componentes' ---")
+        # 2. Componente
+        print("\n--- 2. Componentes ---")
+
         cpu_test = Componente(
             id_marca=marca_test.id_marca,
             id_tipo=tipo_test.id_tipo,
-            nombre="Intel Core i7-13700K",
+            nombre="Intel Core i7-13700K Test",
             consumo_watts=125,
             precio_referencia=420.00,
             stock=10,
-            especificaciones={"socket": "LGA1700", "cores": 16},
+            especificaciones={
+                "socket": "LGA1700",
+                "cores": 16,
+            },
         )
+
         db.add(cpu_test)
-        db.commit()
-        db.refresh(cpu_test)
+        db.flush()
+
         print(
-            f"[OK] Componente creado con ID: {cpu_test.id_componente} | Consumo: {cpu_test.consumo_watts}W"
+            f"[OK] Componente {cpu_test.id_componente} creado."
         )
 
-        # 3. USUARIOS Y CONFIGURACIONES
-        print("\n--- 3. Pruebas en 'usuarios' y 'configuraciones_pc' ---")
+        # 3. Usuario y configuración
+        print("\n--- 3. Usuarios y configuraciones ---")
+
         usuario_test = Usuario(
-            nombre="Yasmin",
-            apellido="Ortega",
-            email="yasmine.test@ensamblapc.com",
-            password_hash="hash_seguro_123",
+            nombre="Usuario",
+            apellido="Prueba",
+            email=f"prueba.{identificador}@ensamblapc.test",
+            password_hash="hash_solo_para_prueba",
         )
-        db.add(usuario_test)
-        db.commit()
-        db.refresh(usuario_test)
 
-        config_test = ConfiguracionPC(
+        db.add(usuario_test)
+        db.flush()
+
+        configuracion_test = ConfiguracionPC(
             id_usuario=usuario_test.id_usuario,
-            nombre="PC Gamer Pruebas",
+            nombre="Configuración de prueba",
             estado="BORRADOR",
             precio_total=420.00,
         )
-        db.add(config_test)
-        db.commit()
-        db.refresh(config_test)
+
+        db.add(configuracion_test)
+        db.flush()
+
         print(
-            f"[OK] Usuario (ID: {usuario_test.id_usuario}) y Configuración (ID: {config_test.id_configuracion}) creados."
+            f"[OK] Usuario {usuario_test.id_usuario} y configuración "
+            f"{configuracion_test.id_configuracion} creados."
         )
 
-        # 4. CONFIGURACIÓN COMPONENTES (RELACIÓN N:M)
-        print("\n--- 4. Pruebas en 'configuracion_componentes' ---")
-        item_config = ConfiguracionComponente(
-            id_configuracion=config_test.id_configuracion,
+        # 4. Componente de configuración
+        print("\n--- 4. Componentes de configuración ---")
+
+        item_configuracion = ConfiguracionComponente(
+            id_configuracion=configuracion_test.id_configuracion,
             id_componente=cpu_test.id_componente,
             cantidad=1,
             precio_al_seleccionar=cpu_test.precio_referencia,
         )
-        db.add(item_config)
-        db.commit()
-        print(
-            f"[OK] Componente asociado a la configuración. Consumo total dinámico: {config_test.consumo_total_watts}W"
-        )
 
-        # 5. REGLAS Y RESULTADOS DE COMPATIBILIDAD
-        print(
-            "\n--- 5. Pruebas en 'reglas_compatibilidad' y 'resultados_compatibilidad' ---"
-        )
+        db.add(item_configuracion)
+        db.flush()
+
+        print("[OK] Componente asociado a la configuración.")
+
+        # 5. Regla y resultado
+        print("\n--- 5. Compatibilidad ---")
+
         regla_test = ReglaCompatibilidad(
-            nombre="Regla Socket CPU",
-            descripcion="Valida coincidencia de socket entre CPU y Motherboard",
-            codigo="R_SOCKET_01",
+            nombre=f"Regla Socket Test {identificador}",
+            descripcion="Valida coincidencia de socket.",
+            codigo=f"R_TEST_{identificador}",
             nivel="ERROR",
         )
+
         db.add(regla_test)
-        db.commit()
-        db.refresh(regla_test)
+        db.flush()
 
         resultado_test = ResultadoCompatibilidad(
-            id_configuracion=config_test.id_configuracion,
+            id_configuracion=configuracion_test.id_configuracion,
             id_regla=regla_test.id_regla,
             resultado="COMPATIBLE",
             mensaje="Socket validado correctamente.",
         )
-        db.add(resultado_test)
-        db.commit()
-        print(
-            f"[OK] Regla (ID: {regla_test.id_regla}) y Resultado guardado correctamente."
-        )
 
-        # 6. LIMPIEZA AUTOMÁTICA CON ON DELETE CASCADE
-        print("\n--- 6. Limpieza de datos de prueba ---")
-        db.delete(
-            usuario_test
-        )  # Elimina en cascada la configuración, sus ítems y resultados
-        db.delete(cpu_test)
-        db.delete(marca_test)
-        db.delete(tipo_test)
-        db.delete(regla_test)
-        db.commit()
+        db.add(resultado_test)
+        db.flush()
+
         print(
-            "[INFO] Registros temporales eliminados correctamente mediante la cascada ORM/SQL."
+            f"[OK] Regla {regla_test.id_regla} y resultado creados."
         )
 
         print("\n" + "=" * 65)
-        print(
-            " [ÉXITO] EL MODELO DE DATOS Y LAS OPERACIONES CRUD ESTÁN 100% OPERATIVOS"
-        )
-        print("=" * 65 + "\n")
+        print(" [ÉXITO] EL MODELO ORM FUNCIONA CORRECTAMENTE")
+        print("=" * 65)
 
-    except Exception as error:
-        db.rollback()
-        print(f"\n[ERROR] Durante la prueba relacional: {error}")
+    except SQLAlchemyError as error:
+        print(f"\n[ERROR] Falló la prueba: {error}")
+        raise
+
     finally:
+        # Esta prueba no debe dejar información temporal.
+        db.rollback()
         db.close()
+
+        print("\n[INFO] Transacción revertida y sesión cerrada.")
 
 
 if __name__ == "__main__":
