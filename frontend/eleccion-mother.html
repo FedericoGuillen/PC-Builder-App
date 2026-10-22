@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab - Elegir Plataforma</title>
+    <style>
+        /* Variables de colores (Estilo BuildLab) */
+        :root {
+            --bg-dark: #070b11;
+            --bg-card: #0f1623;
+            --bg-panel: #161b22;
+            --text-main: #ffffff;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --border-color: #273045;
+            
+            /* Colores sutiles de marca para las plataformas */
+            --amd-color: #ef4444; 
+            --intel-color: #3b82f6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            /* Resplandor de fondo similar al inicio */
+            background-image: radial-gradient(circle at 50% 30%, rgba(15, 30, 50, 0.6) 0%, transparent 70%);
+        }
+
+        /* --- Navbar --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 32px; height: 32px; background-color: #0d1420; border: 1px solid var(--accent-blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--accent-blue); font-size: 0.8rem; }
+        .brand-name { font-size: 1.2rem; font-weight: 600; }
+
+        .nav-right { display: flex; align-items: center; gap: 30px; }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; transition: color 0.2s; }
+        .nav-link:hover { color: var(--text-main); }
+        .btn-admin { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+        .btn-admin:hover { border-color: var(--text-muted); color: var(--text-main); }
+
+        /* --- Contenido Principal --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 20px;
+            text-align: center;
+        }
+
+        .pre-title {
+            color: var(--accent-blue);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 15px; font-weight: 700; }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; max-width: 500px; margin-bottom: 50px; line-height: 1.5; }
+
+        /* --- Contenedor de Tarjetas de Elección --- */
+        .choices-container {
+            display: flex;
+            gap: 40px;
+            max-width: 900px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap; /* Por si lo abren en pantallas chicas */
+        }
+
+        .choice-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Efectos Hover personalizados por marca */
+        .card-amd:hover {
+            border-color: var(--amd-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(239, 68, 68, 0.1);
+        }
+
+        .card-intel:hover {
+            border-color: var(--intel-color);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Ícono de la Motherboard */
+        .mobo-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            margin-bottom: 25px;
+        }
+
+        .card-amd .mobo-icon { color: var(--amd-color); }
+        .card-intel .mobo-icon { color: var(--intel-color); }
+
+        .choice-card h2 { font-size: 1.5rem; margin-bottom: 5px; }
+        .choice-card .socket { color: var(--text-muted); font-size: 0.9rem; font-family: monospace; margin-bottom: 25px; background: #161b22; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border-color); }
+
+        /* Lista de características */
+        .features-list {
+            list-style: none;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 35px;
+            flex: 1;
+        }
+
+        .features-list li {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .features-list li::before {
+            content: '✔';
+            color: var(--text-main);
+            font-size: 0.8rem;
+        }
+
+        /* Botón de selección */
+        .btn-select {
+            width: 100%;
+            padding: 16px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            background-color: var(--accent-blue);
+            color: #000;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-select:hover {
+            background-color: #79b8ff;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo-icon">▣</div>
+            <span class="brand-name">BuildLab</span>
+        </div>
+        <div class="nav-right">
+            <a href="index.html" class="nav-link">Inicio</a>
+            <a href="#" class="nav-link">Perfil</a>
+            <button class="btn-admin">⍟ Admin</button>
+        </div>
+    </nav>
+
+    <!-- ZONA CENTRAL -->
+    <main>
+        <div class="pre-title">Paso 0: Los Cimientos</div>
+        <h1>Elige tu Plataforma Base</h1>
+        <p class="subtitle">La placa madre es el esqueleto de tu PC. Tu elección aquí definirá qué procesadores y memorias RAM serán compatibles en los siguientes pasos.</p>
+
+        <div class="choices-container">
+            
+            <!-- TARJETA AMD -->
+            <div class="choice-card card-amd">
+                <div class="mobo-icon">▦</div>
+                <h2>Plataforma AMD</h2>
+                <div class="socket">SOCKET AM5 • B650</div>
+                
+                <ul class="features-list">
+                    <li>Compatible con procesadores Ryzen 7000/8000</li>
+                    <li>Soporte exclusivo para memorias DDR5</li>
+                    <li>Preparada para PCIe 4.0 y M.2 Gen 4</li>
+                    <li>Excelente ruta de actualización a futuro</li>
+                </ul>
+
+                <!-- El enlace te lleva a la pantalla de armado con la config de AMD -->
+                <a href="armado-guiado.html" class="btn-select">Construir con AMD →</a>
+            </div>
+
+            <!-- TARJETA INTEL -->
+            <div class="choice-card card-intel">
+                <div class="mobo-icon">▦</div>
+                <h2>Plataforma Intel</h2>
+                <div class="socket">SOCKET LGA 1700 • B760</div>
+                
+                <ul class="features-list">
+                    <li>Compatible con procesadores Core 12va a 14va Gen</li>
+                    <li>Soporte híbrido (Opciones DDR4 o DDR5)</li>
+                    <li>Preparada para PCIe 4.0</li>
+                    <li>Arquitectura de núcleos de rendimiento y eficiencia</li>
+                </ul>
+
+                <!-- El enlace te lleva a la pantalla de armado con la config de Intel -->
+                <a href="armado-guiado.html" class="btn-select">Construir con Intel →</a>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+</html>

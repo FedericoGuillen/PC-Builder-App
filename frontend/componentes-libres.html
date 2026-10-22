@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab - Categorías</title>
+    <style>
+        /* Variables de colores para unificar la estética del sitio */
+        :root {
+            --bg-body: #0a0f1a;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #60a5fa;
+            --border-color: #273045;
+            --card-bg: #131a2a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Navbar (Igual al de la primera pantalla) --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-left, .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .brand-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.2;
+        }
+
+        .separator {
+            color: var(--border-color);
+            font-size: 1.2rem;
+        }
+
+        .nav-right a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 1.05rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-right a:hover {
+            color: var(--accent-blue);
+        }
+
+        /* --- Contenido Principal (Grilla de Categorías) --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        /* Contenedor Grid para las categorías */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 columnas iguales */
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 20px;
+        }
+
+        /* Última fila con solo 2 elementos centrados */
+        .categories-grid-bottom {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* --- Botones de Categorías --- */
+        .category-btn {
+            background-color: var(--card-bg);
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            padding: 24px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            width: 100%; /* Toma el ancho de su celda de la grilla */
+        }
+
+        /* Para que los de la última fila tengan el mismo ancho que la grilla */
+        .categories-grid-bottom .category-btn {
+            max-width: 286px; /* Ancho equivalente a una celda del grid */
+        }
+
+        .category-btn:hover {
+            border-color: var(--accent-blue);
+            background-color: #1e293b;
+            transform: translateY(-2px); /* Un pequeño salto hacia arriba */
+            box-shadow: 0 4px 12px rgba(96, 165, 250, 0.15);
+        }
+
+        /* --- Footer --- */
+        footer {
+            padding: 20px 40px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        footer a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- BARRA SUPERIOR -->
+    <nav>
+        <div class="nav-left">
+            <span class="brand-name">BuildLab</span>
+            <span class="separator">|</span>
+            <span class="brand-subtitle">Simulador de<br>armado de PC</span>
+        </div>
+        <div class="nav-right">
+            <a href="index.html">Inicio</a>
+            <span class="separator">|</span>
+            <a href="#">Guías</a>
+            <span class="separator">|</span>
+            <a href="#">Perfil</a>
+        </div>
+    </nav>
+
+    <!-- ZONA CENTRAL -->
+    <main>
+        <!-- Grilla 3x3 para las primeras categorías -->
+        <div class="categories-grid">
+            <a href="eleccion-mother.html" style="text-decoration:none; display:flex; flex:1;"><button class="category-btn">Motherboards</button></a>
+            <button class="category-btn">Fuentes de poder</button>
+            <button class="category-btn">Disipadores</button>
+
+            <button class="category-btn">Procesadores</button>
+            <button class="category-btn">Cableado gabinete</button>
+            <button class="category-btn">Periféricos</button>
+
+            <button class="category-btn">Memorias RAM</button>
+            <button class="category-btn">Pila CMOS</button>
+            <button class="category-btn">Redes y Audio</button>
+        </div>
+
+        <!-- Fila de abajo centrada para los 2 restantes -->
+        <div class="categories-grid-bottom">
+            <button class="category-btn">Tarjetas gráficas</button>
+            <button class="category-btn">Almacenamientos</button>
+        </div>
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer>
+        <a href="#">Contacto</a>
+        <span class="separator">|</span>
+        <a href="#">P&R</a>
+    </footer>
+
+</body>
+</html>

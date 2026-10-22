@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab - Perfil de Uso</title>
+    <style>
+        :root {
+            --bg-dark: #070b11;
+            --bg-card: #0f1623;
+            --text-main: #ffffff;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --border-color: #273045;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
+        
+        nav { display: flex; justify-content: space-between; padding: 20px 40px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .brand-name { font-size: 1.2rem; font-weight: 600; color: white; display: flex; align-items: center; gap: 10px; }
+        
+        main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 50px 20px; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; }
+        .subtitle { color: var(--text-muted); margin-bottom: 40px; }
+
+        .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 900px; width: 100%; margin-bottom: 40px; }
+        
+        .card { background-color: var(--bg-card); border: 2px solid var(--border-color); border-radius: 12px; padding: 30px; cursor: pointer; transition: all 0.2s; position: relative; }
+        .card:hover { border-color: #4b5563; transform: translateY(-3px); }
+        .card.active { border-color: var(--accent-blue); background-color: rgba(88, 166, 255, 0.05); }
+        
+        .card-icon { font-size: 2rem; margin-bottom: 15px; }
+        .card h3 { font-size: 1.2rem; margin-bottom: 10px; }
+        .card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; }
+
+        .btn-continuar { background-color: var(--accent-blue); color: #000; border: none; padding: 16px 40px; font-size: 1.1rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .btn-continuar:hover:not(:disabled) { background-color: #79b8ff; box-shadow: 0 0 20px rgba(88, 166, 255, 0.3); }
+        
+        /* Estilo para el botón deshabilitado (Criterio 4) */
+        .btn-continuar:disabled { background-color: #1f2937; color: #4b5563; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="brand-name"><span style="color:var(--accent-blue);">▣</span> BuildLab</div>
+    </nav>
+
+    <main>
+        <h1>¿Para qué vas a usar tu PC?</h1>
+        <p class="subtitle">Selecciona tu perfil principal para recomendarte componentes base.</p>
+
+        <div class="cards-grid">
+            <!-- Data-perfil guarda el valor que usaremos en JavaScript -->
+            <div class="card" data-perfil="gaming">
+                <div class="card-icon">🎮</div>
+                <h3>Gaming</h3>
+                <p>Jugabilidad fluida, gráficos altos y transmisión en vivo sin perder fotogramas.</p>
+            </div>
+
+            <div class="card" data-perfil="diseno">
+                <div class="card-icon">🎨</div>
+                <h3>Diseño Gráfico</h3>
+                <p>Renderizado rápido, edición de video fluida y manejo de software creativo.</p>
+            </div>
+
+            <div class="card" data-perfil="oficina">
+                <div class="card-icon">💼</div>
+                <h3>Oficina</h3>
+                <p>Tareas diarias, navegación rápida, multitarea sin esfuerzo y velocidad confiable.</p>
+            </div>
+        </div>
+
+        <button id="btnContinuar" class="btn-continuar" disabled>Continuar →</button>
+    </main>
+
+    <script>
+        const tarjetas = document.querySelectorAll('.card');
+        const btnContinuar = document.getElementById('btnContinuar');
+        let perfilSeleccionado = null;
+
+        // Criterio 3: El usuario puede seleccionar solamente un perfil
+        tarjetas.forEach(tarjeta => {
+            tarjeta.addEventListener('click', () => {
+                // Removemos la clase active de todas
+                tarjetas.forEach(t => t.classList.remove('active'));
+                
+                // Se la agregamos solo a la clickeada
+                tarjeta.classList.add('active');
+                
+                // Guardamos el valor
+                perfilSeleccionado = tarjeta.getAttribute('data-perfil');
+                
+                // Criterio 4: Habilitamos el botón al tener una selección
+                btnContinuar.removeAttribute('disabled');
+            });
+        });
+
+        // Criterios 5 y 6: Guardar y Navegar
+        btnContinuar.addEventListener('click', () => {
+            if (perfilSeleccionado) {
+                // Guarda la selección en la memoria del navegador
+                localStorage.setItem('buildlab_perfil', perfilSeleccionado);
+                
+                // Redirige a la siguiente pantalla
+                window.location.href = 'elegir-motherboard.html';
+            }
+        });
+    </script>
+</body>
+</html>
