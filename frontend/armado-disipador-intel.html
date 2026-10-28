@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab - Instalar Disipador</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #21262d;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --border-color: #30363d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- Navbar Superior --- */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; border-bottom: 1px solid var(--border-color); }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 30px; height: 30px; border: 1px solid var(--accent-blue); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--accent-blue); }
+        .nav-left a { text-decoration: none; color: white; font-size: 1.2rem; font-weight: bold; margin-left: 5px; }
+        .nav-center { display: flex; gap: 30px; }
+        .nav-center a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .nav-center a.active, .nav-center a:hover { color: var(--accent-blue); }
+        .nav-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: var(--text-muted); }
+        .profile-btn { background: #21262d; border: 1px solid var(--border-color); color: white; padding: 6px 16px; border-radius: 6px; cursor: pointer; }
+
+        /* --- Layout de 3 Columnas (Ajustado) --- */
+        main { display: grid; grid-template-columns: 420px 1fr 340px; gap: 20px; padding: 20px; flex: 1; height: calc(100vh - 65px); }
+        .panel { background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; position: relative; }
+
+        /* --- Columna 1: Instrucciones --- */
+        .panel-left { padding: 25px; overflow-y: auto; }
+        .progress-bar { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 20px; font-family: monospace; }
+        .step-label { color: var(--accent-blue); font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; }
+        .panel-left h1 { font-size: 2.1rem; margin-bottom: 15px; color: white; line-height: 1.2; }
+        .panel-left p.desc { color: var(--text-muted); font-size: 1.05rem; margin-bottom: 30px; }
+
+        .step-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
+        .step-item { display: flex; gap: 15px; padding: 15px; border-radius: 8px; border: 1px solid transparent; transition: all 0.3s ease; }
+        .step-number { background: var(--bg-card); border: 1px solid var(--border-color); width: 28px; height: 28px; display: flex; justify-content: center; align-items: center; border-radius: 6px; font-size: 0.85rem; font-weight: bold; color: var(--text-muted); flex-shrink: 0; transition: all 0.3s ease; }
+        .step-text h4 { color: white; font-size: 1.05rem; margin-bottom: 5px; transition: color 0.3s ease; }
+        .step-text p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.5; }
+
+        
+
+        .alert-box { background-color: rgba(63, 185, 80, 0.1); border: 1px solid var(--accent-green); border-radius: 8px; padding: 15px; margin-bottom: auto; }
+        .alert-box h4 { color: var(--accent-green); font-size: 0.9rem; margin-bottom: 8px; }
+        .alert-box p { color: var(--text-main); font-size: 0.85rem; line-height: 1.4; }
+
+        .step-nav { display: flex; gap: 10px; margin-top: 30px; }
+        .btn-prev { flex: 1; background: var(--bg-card); color: white; border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; }
+        .btn-next { flex: 2; background: var(--accent-blue); color: black; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; text-align: center; }
+
+        /* --- Columna 2: Banco de Trabajo --- */
+        .panel-center { padding: 20px; display: flex; flex-direction: column; }
+        .center-header { margin-bottom: 20px; }
+        .center-header h2 { font-size: 1.2rem; color: white; }
+        .center-header p { font-size: 0.85rem; color: var(--text-muted); }
+
+        .workspace-canvas { flex: 1; background-color: #0b0f14; border: 1px solid var(--border-color); border-radius: 8px; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: hidden; }
+        .motherboard-wrapper { position: relative; width: 100%; max-width: 600px; display: flex; }
+        .motherboard-img { width: 100%; height: auto; display: block; }
+
+        /* Falso CPU instalado (Paso 1) */
+        .cpu-installed {
+            position: absolute;
+            top: 36%; left: 52.6%; /* Ajustar estas coordenadas según tu motherboard-vacia.png */
+            transform: translate(-50%, -50%);
+            width: 15%; height: 15%;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            color: #4b5563; font-size: 1.5rem;
+            z-index: 2;
+        }
+
+        /* Falsa RAM instalada (Paso 2) */
+        .ram-installed {
+            position: absolute;
+            top: 36%; left: 77%; /* Ajustar estas coordenadas según tu motherboard-vacia.png */
+            transform: translate(-50%, -50%);
+            width: 9%; height: 38%;
+            display: flex; gap: 4px; justify-content: center; align-items: center;
+            z-index: 2;
+        }
+        .ram-stick { width: 10px; background: #30363d; height: 100%; border-radius: 2px; }
+
+        /* Dropzone para el Disipador (Más grande que el CPU) */
+        .dropzone-cooler {
+            position: absolute;
+            /* El centro debe ser el mismo que el del CPU (top: 38%, left: 58%) */
+            top: 34%; 
+            left: 52.5%; 
+            transform: translate(-50%, -50%);
+            width: 35%;  /* Más ancho para abarcar los tornillos */
+            aspect-ratio: 1 / 1; /* Mantenemos formato cuadrado general para el disipador */
+            
+            border: 2px dashed var(--accent-green);
+            background-color: rgba(63, 185, 80, 0.08);
+            border-radius: 50%; /* Hacemos el área circular para disipadores de stock, o déjalo en 8px para cuadrados */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 5px;
+            color: var(--accent-green);
+            cursor: pointer;
+            animation: pulse 2s infinite;
+            transition: all 0.2s;
+            z-index: 5; /* Queda por encima del CPU */
+            overflow: hidden;
+        }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.3); } 70% { box-shadow: 0 0 0 15px rgba(63, 185, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); } }
+
+        .dropzone-arrow { font-size: 1.2rem; margin-bottom: 5px; }
+
+        .instruction-toast { background: var(--bg-card); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 20px; }
+        .instruction-toast h4 { color: white; font-size: 0.95rem; margin-bottom: 5px; }
+        .instruction-toast p { color: var(--text-muted); font-size: 0.85rem; }
+
+        /* --- Columna 3: Inventario --- */
+        .panel-right { display: flex; flex-direction: column; gap: 15px; }
+        .stats-box { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; }
+        .stats-header { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px; }
+        .stats-value { font-size: 2.5rem; font-weight: bold; color: white; display: flex; align-items: baseline; gap: 10px; }
+        .stats-value span { font-size: 0.85rem; color: var(--text-muted); font-weight: normal; }
+        .inventory-box { background: var(--bg-panel); border: 1px solid var(--border-color); padding: 20px; border-radius: 12px; flex: 1; overflow-y: auto; }
+        .inventory-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; }
+        .inventory-header h3 { color: white; font-size: 1.1rem; }
+
+        .component-card { background: var(--bg-card); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 12px; margin-bottom: 15px; cursor: grab; position: relative; box-shadow: 0 4px 12px rgba(88, 166, 255, 0.1); }
+        .component-card:active { cursor: grabbing; }
+        .comp-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+        .comp-icon { width: 40px; height: 40px; background: #0d1117; border: 1px solid var(--border-color); border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        .comp-info { flex: 1; margin-left: 12px; }
+        .comp-type { font-size: 0.7rem; color: var(--accent-blue); font-weight: bold; }
+        .comp-name { color: white; font-size: 0.9rem; font-weight: bold; }
+        .comp-watts { font-size: 0.75rem; color: var(--text-muted); font-family: monospace; }
+        .comp-desc { font-size: 0.75rem; color: var(--text-muted); margin-left: 52px; margin-bottom: 10px;}
+        .drag-hint { font-size: 0.75rem; color: var(--accent-blue); margin-left: 52px; display: flex; align-items: center; gap: 5px; }
+
+        .component-card-inactive { border-color: var(--border-color); box-shadow: none; opacity: 0.7; cursor: default; }
+        .component-card-inactive .comp-type, .component-card-inactive .drag-hint { color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <div class="logo-icon">▣</div>
+            <a href="index.html">BuildLab</a>
+        </div>
+        <div class="nav-center">
+            <a href="#" class="active">Armado Guiado</a>
+            <a href="componentes-libres.html">Modo Libre</a>
+            <a href="#">Mi PC guardadas</a>
+        </div>
+        <div class="nav-right">
+            <button class="profile-btn">Perfil</button>
+        </div>
+    </nav>
+
+    <main>
+        <!-- COLUMNA 1: INSTRUCCIONES -->
+        <div class="panel panel-left">
+            <div class="progress-bar">
+                <span>Tu primer armado</span>
+                <span>02 / 06</span>
+            </div>
+            
+            <div class="step-label">⎛ Manteniendo la frescura</div>
+            <h1>Paso 3: Instalar el Disipador</h1>
+            <p class="desc">El procesador genera mucho calor. El disipador (cooler) transfiere y expulsa esas altas temperaturas para evitar que la PC se apague.</p>
+
+            <div class="step-list">
+                <div class="step-item">
+                    <div class="step-number">1</div>
+                    <div class="step-text">
+                        <h4>Aplica pasta térmica</h4>
+                        <p>Si el disipador no la trae pre-aplicada, coloca una gota del tamaño de un guisante en el centro del procesador.</p>
+                    </div>
+                </div>
+                <!-- PASO DESTACADO -->
+                <div class="step-item">
+                    <div class="step-number">2</div>
+                    <div class="step-text">
+                        <h4>Alinea y atornilla en cruz</h4>
+                        <p>Arrastra el disipador sobre el procesador. Atornilla siempre en patrón de 'X' para distribuir la presión.</p>
+                    </div>
+                </div>
+                <div class="step-item">
+                    <div class="step-number">3</div>
+                    <div class="step-text">
+                        <h4>Conecta el cable al CPU_FAN</h4>
+                        <p>Busca los pines marcados como CPU_FAN en la placa madre para que el ventilador reciba energía.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <h4>🛡 No olvides el plástico</h4>
+                <p>Asegúrate siempre de retirar el plástico protector transparente de la base del disipador antes de instalarlo.</p>
+            </div>
+
+            <div class="step-nav">
+                <a href="armado-guiado-intel.html" style="text-decoration:none; display:flex; flex:1;"><button class="btn-prev">Atras</button></a>
+                <a href="armado-ram-intel.html" style="text-decoration:none; display:flex; flex:2;"><button class="btn-next">Siguiente →</button></a>
+            </div>
+        </div>
+
+        <!-- COLUMNA 2: BANCO DE TRABAJO -->
+        <div class="panel panel-center">
+            <div class="center-header">
+                <h2>Tu banco de trabajo</h2>
+                <p>Placa madre B650 • AM5 • Micro-ATX</p>
+            </div>
+            
+            <div class="workspace-canvas">
+                <div class="motherboard-wrapper">
+                    <img src="mother-intel.jpg" alt="Placa Madre" class="motherboard-img">
+                    
+                    <!-- Falso CPU instalado -->
+                    <div class="cpu-installed">🔳</div>
+                    
+                    
+
+                    <!-- Dropzone específico para el Disipador -->
+                    <div class="dropzone-cooler">
+                        <div class="dropzone-arrow">↓</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="instruction-toast">
+                <h4>Presión uniforme.</h4>
+                <p>Arrastra el disipador desde el inventario. El sistema verificará que los anclajes coincidan con el socket de tu placa madre.</p>
+            </div>
+        </div>
+
+        <!-- COLUMNA 3: INVENTARIO -->
+        <div class="panel-right">
+            <div class="stats-box">
+                <div class="stats-header">
+                    <span>⚡ Consumo energético</span>
+                    <span style="color: var(--accent-green);">● VIVO</span>
+                </div>
+                <div class="stats-value">
+                    75 <span>Watts en uso / 650 W</span>
+                </div>
+            </div>
+
+            <div class="inventory-box">
+                <div class="inventory-header">
+                    <h3>Tus componentes</h3>
+                    <span>1 disponible</span>
+                </div>
+				<div class="component-card" draggable="true" id="cooler-card">
+    <div class="comp-top">
+        <div class="comp-icon">❄</div>
+        <div class="comp-info">
+            <div class="comp-type">DISIPADOR</div>
+            <div class="comp-name">AMD Wraith Stealth</div>
+        </div>
+        <div class="comp-watts">5 W</div>
+    </div>
+    <div class="comp-desc">Aire - Perfil bajo - Conector 4 pines</div>
+    <div class="drag-hint">⇱ Arrastra sobre el procesador</div>
+</div>
+
+                <!-- Tarjetas INACTIVAS -->
+                <div class="component-card component-card-inactive">
+                    <div class="comp-top">
+                        <div class="comp-icon">🔳</div>
+                        <div class="comp-info">
+                            <div class="comp-type">CPU (Instalado)</div>
+                            <div class="comp-name">AMD Ryzen 5
+							<script>
+    // 1. Seleccionamos los elementos específicos del disipador
+    const coolerCard = document.getElementById('cooler-card');
+    const dropzone = document.querySelector('.dropzone-cooler');
+    const wattsDisplay = document.querySelector('.stats-value');
+    const btnSiguiente = document.querySelector('.btn-next');
+
+    // 2. Al empezar a arrastrar, etiquetamos qué pieza es
+    coolerCard.addEventListener('dragstart', (evento) => {
+        evento.dataTransfer.setData('text/plain', 'cooler-cpu'); 
+        dropzone.style.borderColor = '#58a6ff';
+    });
+
+    // 3. (CRÍTICO) Permitimos que la zona acepte objetos
+    dropzone.addEventListener('dragover', (evento) => {
+        evento.preventDefault(); 
+        dropzone.style.backgroundColor = 'rgba(88, 166, 255, 0.2)';
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.style.backgroundColor = 'rgba(63, 185, 80, 0.1)';
+    });
+
+    // 4. Qué pasa al soltar la pieza correcta
+    dropzone.addEventListener('drop', (evento) => {
+        evento.preventDefault();
+        
+        const piezaArrastrada = evento.dataTransfer.getData('text/plain');
+
+        // Validamos que sea el disipador y no otra cosa
+        if (piezaArrastrada === 'cooler-cpu') {
+            dropzone.style.border = '1px solid #161b22';
+            dropzone.style.backgroundColor = '#1f2937';
+            dropzone.style.animation = 'none';
+            
+            dropzone.innerHTML = `
+                <div style="font-size: 2.5rem; color: #8b949e;">❄</div>
+                <div style="font-size: 0.65rem; color: #3fb950; font-weight: bold; margin-top: 5px;">✔ CONECTADO</div>
+            `;
+
+            // Actualizamos los Watts sumando los 5W del cooler a los 75W base
+            wattsDisplay.innerHTML = '80 <span>Watts en uso / 650 W</span>';
+
+            coolerCard.setAttribute('draggable', 'false');
+            coolerCard.classList.add('component-card-inactive');
+            coolerCard.style.cursor = 'default';
+
+            btnSiguiente.style.boxShadow = '0 0 20px rgba(88, 166, 255, 0.6)';
+            btnSiguiente.style.transform = 'scale(1.02)';
+        }
+    });
+</script>

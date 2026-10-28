@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Armado de PC</title>
+    <style>
+        /* Variables de colores basadas en el nuevo diseño */
+        :root {
+            --bg-dark: #070b11;
+            --bg-card: #0f1623;
+            --text-main: #ffffff;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --border-color: #273045;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            /* Efecto de luz radial sutil en el fondo */
+            background-image: radial-gradient(circle at 50% 40%, rgba(15, 30, 50, 0.8) 0%, transparent 60%);
+        }
+
+        /* --- Barra de Navegación --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 10;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background-color: #0d1420;
+            border: 1px solid var(--accent-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-blue);
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-main);
+        }
+
+        .nav-link.active {
+            color: var(--accent-blue);
+            position: relative;
+        }
+
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -25px; /* Lo ajusta al borde inferior del nav */
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-blue);
+        }
+
+        .btn-admin {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-admin:hover {
+            border-color: var(--text-muted);
+            color: var(--text-main);
+        }
+
+        /* --- Contenido Principal --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .cpu-badge {
+            width: 60px;
+            height: 60px;
+            background-color: #0b111a;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.1);
+        }
+
+        .pre-title {
+            color: var(--accent-blue);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        h1 .highlight {
+            color: var(--accent-blue);
+        }
+
+        .hero-desc {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* --- Contenedor de Botones y Navegación --- */
+        .buttons-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 380px;
+            margin-bottom: 20px;
+        }
+
+        /* Quitamos el subrayado azul que le pone HTML por defecto a los links (etiquetas <a>) */
+        .nav-button-link {
+            text-decoration: none;
+            width: 100%;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: #000;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.3); /* Efecto de luz (glow) */
+        }
+
+        .btn-primary:hover {
+            background-color: #79b8ff;
+            box-shadow: 0 0 30px rgba(88, 166, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: rgba(63, 185, 80, 0.05); /* Fondo verde super transparente */
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(63, 185, 80, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .guarantee {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* --- Características Inferiores --- */
+        .features {
+            display: flex;
+            gap: 30px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feature-separator {
+            width: 1px;
+            height: 15px;
+            background-color: var(--border-color);
+        }
+
+        /* --- Elementos Decorativos de las Esquinas --- */
+        .corner-text {
+            position: absolute;
+            color: #4b5563;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            font-family: monospace;
+        }
+
+        .ct-bottom-left { bottom: 20px; left: 40px; }
+        .ct-bottom-right { 
+            bottom: 20px; 
+            right: 40px; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav>
+        <div class="nav-left">
+            <div class="logo-icon">▣</div>
+            <span class="brand-name">BuildLab</span>
+        </div>
+        <div class="nav-right">
+            <!-- La clase "active" crea la barrita azul debajo de Inicio -->
+            <a href="#" class="nav-link active">Inicio</a>
+            <a href="perfil.html" class="nav-link">Perfil</a>
+            <a href="admin.html" class="nav-link"><button class="btn-admin">⍟ Admin</button></a>
+        </div>
+    </nav>
+
+    <!-- ZONA CENTRAL -->
+    <main>
+        <div class="cpu-icon">
+            <div class="cpu-badge">⚙</div>
+        </div>
+        
+        <div class="pre-title">TU PRIMER ARMADO EMPIEZA AQUÍ</div>
+        
+        <h1>Arma la PC de tus sueños<br><span class="highlight">Paso a Paso</span></h1>
+        
+        <p class="hero-desc">
+            Herramienta de armado de PC paso a paso, con indicaciones detalladas, ejemplos gráficos e interactivos. Ideal para principiantes.
+        </p>
+
+        <!-- ACÁ ESTÁ LA CONEXIÓN: Las etiquetas <a> envuelven a los botones -->
+        <div class="buttons-group">
+            <!-- Al hacer clic acá, el navegador buscará el archivo categorias.html -->
+            <a href="seleccion-perfil.html" class="nav-button-link">
+                <button class="btn btn-primary">Comenzar armado →</button>
+            </a>
+
+            <!-- Al hacer clic acá, irá a otro archivo -->
+            <a href="componentes-libres.html" class="nav-button-link">
+                <button class="btn btn-secondary">▤ Elegir componentes libres</button>
+            </a>
+        </div>
+
+        <div class="guarantee">
+            <span>🛡</span> Aprende sin riesgos. Tus componentes son virtuales.
+        </div>
+
+        <div class="features">
+            <div class="feature-item"><span>📋</span> Guía paso a paso</div>
+            <div class="feature-separator"></div>
+            <div class="feature-item"><span>🖱</span> Armado interactivo</div>
+            <div class="feature-separator"></div>
+            <div class="feature-item"><span>🎓</span> Sin experiencia previa</div>
+        </div>
+    </main>
+
+    <!-- TEXTOS DECORATIVOS DE LAS ESQUINAS -->
+    <div class="corner-text ct-bottom-left">BUILDLAB / SIMULADOR DE ARMADO DE PC</div>
+    <div class="corner-text ct-bottom-right"><div class="status-dot"></div> Tu banco de trabajo está listo</div>
+
+</body>
+</html>

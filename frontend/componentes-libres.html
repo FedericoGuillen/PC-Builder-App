@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab - Modo Libre</title>
+    <style>
+        /* Variables de colores (Estilo BuildLab) */
+        :root {
+            --bg-dark: #070b11;
+            --bg-card: #0f1623;
+            --text-main: #ffffff;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --border-color: #273045;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            /* Resplandor de fondo unificado */
+            background-image: radial-gradient(circle at 50% 30%, rgba(15, 30, 50, 0.6) 0%, transparent 70%);
+        }
+
+        /* --- Navbar Unificada --- */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 12px; font-weight: bold; }
+        .logo-icon { width: 30px; height: 30px; border: 1px solid var(--accent-blue); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--accent-blue); }
+        .brand-link { text-decoration: none; color: white; font-size: 1.2rem; }
+        
+        .nav-center { display: flex; gap: 30px; }
+        .nav-center a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .nav-center a:hover, .nav-center a.active { color: var(--accent-blue); }
+        
+        .nav-right { display: flex; align-items: center; gap: 15px; font-size: 0.85rem; color: var(--text-muted); }
+        .profile-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
+        .profile-btn:hover { border-color: var(--text-muted); }
+
+        /* --- Contenido Principal --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .pre-title {
+            color: var(--accent-blue);
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-family: monospace;
+            margin-bottom: 15px;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 15px; font-weight: 700; }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; max-width: 600px; margin-bottom: 50px; line-height: 1.5; }
+
+        /* --- Grilla de Categorías --- */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* En la última fila, centramos los dos elementos sobrantes */
+        .categories-grid .category-btn:nth-child(10) {
+            grid-column: 1 / 2;
+            justify-self: end;
+            width: calc(100% - 10px);
+        }
+        .categories-grid .category-btn:nth-child(11) {
+            grid-column: 2 / 3;
+            justify-self: start;
+            width: calc(100% - 10px);
+        }
+
+        .category-btn {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            color: var(--text-main);
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .category-btn:hover {
+            border-color: var(--accent-blue);
+            background-color: rgba(88, 166, 255, 0.05);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(88, 166, 255, 0.1);
+            color: var(--accent-blue);
+        }
+
+        /* Footer simple */
+        footer {
+            padding: 20px 40px;
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        footer a { color: var(--text-muted); text-decoration: none; font-weight: bold; }
+        footer a:hover { color: var(--text-main); }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <div class="logo-icon">▣</div>
+            <a href="index.html" class="brand-link">BuildLab</a>
+        </div>
+        <div class="nav-center">
+            <a href="index.html">Inicio</a>
+            <a href="#" class="active">Modo Libre</a>
+            <a href="#">Mi PC guardadas</a>
+        </div>
+        <div class="nav-right">
+            <button class="profile-btn">Perfil</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="pre-title">Catálogo Completo</div>
+        <h1>Selecciona un Componente</h1>
+        <p class="subtitle">Explora todas las categorías disponibles. En el Modo Libre, tú decides el orden y nosotros verificamos la compatibilidad en tiempo real.</p>
+
+        <div class="categories-grid">
+            <a href="eleccion-mother.html" class="category-btn">Motherboards</a>
+            <a href="#" class="category-btn">Fuentes de poder</a>
+            <a href="#" class="category-btn">Disipadores</a>
+            <a href="#" class="category-btn">Procesadores</a>
+            <a href="#" class="category-btn">Cableado gabinete</a>
+            <a href="#" class="category-btn">Periféricos</a>
+            <a href="#" class="category-btn">Memorias RAM</a>
+            <a href="#" class="category-btn">Pila CMOS</a>
+            <a href="#" class="category-btn">Redes y Audio</a>
+            <a href="#" class="category-btn">Tarjetas gráficas</a>
+            <a href="#" class="category-btn">Almacenamientos</a>
+        </div>
+    </main>
+
+    <footer>
+        <a href="#">Contacto</a>
+        <a href="#">P&R</a>
+    </footer>
+
+</body>
+</html>

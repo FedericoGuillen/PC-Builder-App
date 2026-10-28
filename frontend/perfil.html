@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab - Perfil de Usuario</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --bg-card: #21262d;
+            --bg-input: #0b0f14;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-mint: #88f2b6;
+            --border-color: #30363d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+
+        body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- Navbar Superior --- */
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; border-bottom: 1px solid var(--border-color); background: var(--bg-dark); }
+        .nav-left { display: flex; align-items: center; gap: 12px; }
+        .logo-icon { width: 32px; height: 32px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--accent-blue); font-size: 1.2rem; }
+        .nav-left span { color: white; font-size: 1rem; font-weight: 500; margin-left: 5px; }
+        .nav-right a { text-decoration: none; }
+        .btn-back { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-back:hover { background: var(--border-color); }
+
+        /* --- Contenedor Principal --- */
+        main { display: flex; flex-direction: column; flex: 1; padding: 25px 40px; overflow-y: auto; gap: 20px; }
+
+        /* --- Cabecera de Sección --- */
+        .page-header { display: flex; justify-content: space-between; align-items: flex-end; }
+        .header-content { display: flex; flex-direction: column; gap: 8px; }
+        .breadcrumb { font-size: 0.85rem; color: var(--text-muted); display: flex; gap: 8px; }
+        .breadcrumb span { color: var(--accent-blue); }
+        .page-title { font-size: 2rem; color: white; font-weight: 700; margin-top: 5px; }
+        .page-subtitle { color: var(--text-muted); font-size: 0.95rem; }
+        
+        .btn-free-mode { background: rgba(88, 166, 255, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 8px 16px; border-radius: 6px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-free-mode:hover { background: rgba(88, 166, 255, 0.2); }
+
+        /* --- Layout de Columnas --- */
+        .content-grid { display: grid; grid-template-columns: 360px 1fr; gap: 25px; flex: 1; min-height: 0; }
+        
+        .panel { background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 12px; display: flex; flex-direction: column; }
+
+        /* --- Columna Izquierda: Lista de PCs --- */
+        .panel-left { padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        
+        .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .list-header-title { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; color: white; font-weight: bold; }
+        .list-header-count { font-size: 0.8rem; color: var(--accent-blue); font-family: monospace; }
+
+        /* Selector Desplegable (NUEVO) */
+        .dropdown-container { position: relative; width: 100%; }
+        .pc-selector { background: var(--bg-card); border: 1px solid var(--accent-blue); border-radius: 8px; padding: 15px; cursor: pointer; position: relative; transition: 0.2s; }
+        .pc-selector:hover { background: rgba(88, 166, 255, 0.05); }
+        .pc-selector-title { display: flex; align-items: center; gap: 10px; color: white; font-weight: bold; font-size: 1rem; margin-bottom: 5px; }
+        .pc-selector-desc { color: var(--text-muted); font-size: 0.8rem; margin-left: 25px; }
+        .pc-dropdown-icon { position: absolute; right: 15px; top: 15px; color: var(--text-muted); transition: transform 0.3s; }
+        
+        .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; margin-top: 5px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5); overflow: hidden; }
+        .dropdown-menu.active { display: block; }
+        .dropdown-item { padding: 12px 15px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--bg-panel); }
+        .dropdown-item-title { color: white; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+        .dropdown-item-desc { color: var(--text-muted); font-size: 0.75rem; margin-left: 20px; }
+
+        .alert-green { background: rgba(63, 185, 80, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 12px 15px; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+
+        .comp-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+        .comp-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; gap: 12px; }
+        .comp-icon-small { width: 35px; height: 35px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--text-muted); font-size: 1rem; flex-shrink: 0; }
+        .comp-info { flex: 1; }
+        .comp-type { color: white; font-size: 0.85rem; font-weight: 500; margin-bottom: 4px; }
+        .comp-name { color: var(--text-muted); font-size: 0.8rem; font-weight: bold; }
+        .comp-qty { color: var(--text-muted); font-size: 0.8rem; font-family: monospace; }
+
+        .alert-blue { background: rgba(88, 166, 255, 0.1); border: 1px solid var(--accent-blue); color: var(--text-main); padding: 15px; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: flex-start; gap: 10px; margin-top: auto; line-height: 1.4; }
+        .alert-blue span { color: var(--accent-blue); font-size: 1.2rem; }
+
+        /* --- Columna Derecha: Componentes (Grid) --- */
+        .panel-right { padding: 25px; display: flex; flex-direction: column; overflow: hidden; }
+        
+        .components-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
+        .components-header h3 { color: white; font-size: 1.3rem; margin-bottom: 6px; }
+        .components-header p { color: var(--text-muted); font-size: 0.9rem; }
+        .components-count { font-size: 0.8rem; color: var(--text-muted); font-family: monospace; }
+
+        /* Toolbar (Buscador y Filtros) */
+        .toolbar { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .toolbar-top { display: flex; gap: 15px; }
+        
+        .search-box { flex: 1; position: relative; display: flex; align-items: center; }
+        .search-icon { position: absolute; left: 15px; color: var(--text-muted); font-size: 1rem; }
+        .search-box input { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); color: white; padding: 10px 15px 10px 40px; border-radius: 6px; font-size: 0.9rem; outline: none; }
+        .search-box input:focus { border-color: var(--accent-blue); }
+        
+        .sort-select { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 10px 15px; border-radius: 6px; font-size: 0.85rem; outline: none; cursor: pointer; }
+
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-pill { background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .filter-pill:hover { border-color: var(--text-main); color: white; }
+        .filter-pill.active { background: rgba(88, 166, 255, 0.1); border-color: var(--accent-blue); color: var(--accent-blue); }
+
+        /* Grid de Tarjetas */
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; overflow-y: auto; padding-right: 5px; padding-bottom: 20px; }
+        
+        .detail-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; display: flex; flex-direction: column; transition: 0.2s; }
+        .detail-card:hover { border-color: var(--text-muted); }
+        
+        .card-img-placeholder { width: 100%; height: 130px; background: var(--bg-card); border-radius: 6px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color); font-size: 3rem; color: #4b5563; }
+        
+        .card-tag { font-size: 0.65rem; color: var(--accent-blue); text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px; margin-bottom: 5px; }
+        .card-title { color: white; font-size: 1rem; font-weight: bold; margin-bottom: 10px; }
+        
+        .card-specs { display: flex; flex-direction: column; gap: 4px; margin-bottom: 15px; flex: 1; }
+        .card-specs span { color: var(--text-muted); font-size: 0.8rem; }
+        .card-power { color: white !important; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+
+        .btn-card { background: var(--accent-mint); color: #000; border: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 0.85rem; cursor: pointer; text-align: center; transition: 0.2s; width: 100px; }
+        .btn-card:hover { opacity: 0.9; }
+
+        /* --- Footer Inferior --- */
+        .main-footer { padding: 15px 40px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px; }
+        .footer-right { display: flex; align-items: center; gap: 6px; }
+        .footer-dot { width: 6px; height: 6px; background: var(--accent-green); border-radius: 50%; }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="nav-left">
+            <div class="logo-icon">▣</div>
+            <span>BuildLab - Perfil</span>
+        </div>
+        <div class="nav-right">
+            <a href="index.html" class="btn-back">← Volver al Inicio</a>
+        </div>
+    </nav>
+
+    <main>
+        <header class="page-header">
+            <div class="header-content">
+                <div class="breadcrumb">Inicio <span>›</span> Perfil</div>
+                <h1 class="page-title">Perfil</h1>
+                <p class="page-subtitle">Administra y modifica tus PC'S</p>
+            </div>
+            <button class="btn-free-mode">
+                <span style="color: var(--accent-blue);">●</span> Modo libre
+            </button>
+        </header>
+
+        <div class="content-grid">
+            
+            <!-- PANEL IZQUIERDO: Lista de PC -->
+            <aside class="panel panel-left">
+                <div class="list-header">
+                    <div class="list-header-title">
+                        <span>🖥️</span> Lista de PC'S <span>=</span>
+                    </div>
+                    <div class="list-header-count" id="contador-pcs">Cargando...</div>
+                </div>
+
+                <!-- Selector Desplegable -->
+                <div class="dropdown-container">
+                    <div class="pc-selector" id="btn-selector">
+                        <div class="pc-selector-title"><span id="selector-icon">⚡</span> <span id="selector-name">Cargando...</span></div>
+                        <div class="pc-selector-desc" id="selector-desc">Seleccione una PC</div>
+                        <div class="pc-dropdown-icon" id="selector-arrow">▼</div>
+                    </div>
+                    
+                    <div class="dropdown-menu" id="menu-pcs">
+                        <!-- Las opciones del menú se generan con JS -->
+                    </div>
+                </div>
+
+                <div class="alert-green">
+                    <span>🛡️</span> <span id="recomendacion-fuente">Cargando fuente...</span>
+                </div>
+
+                <div class="comp-list" id="contenedor-componentes">
+                    <!-- JavaScript inyecta los componentes aca -->
+                </div>
+
+                <div class="alert-blue">
+                    <span>💡</span>
+                    <div>Empieza por el procesador. Su socket te ayudará a elegir la placa madre.</div>
+                </div>
+            </aside>
+
+            <!-- PANEL DERECHO: Grid de Componentes -->
+            <section class="panel panel-right">
+                <div class="components-header">
+                    <div>
+                        <h3>Componentes</h3>
+                        <p>Compara lo esencial y añade la pieza que prefieras.</p>
+                    </div>
+                    <div class="components-count">6 componentes</div>
+                </div>
+
+                <div class="toolbar">
+                    <div class="toolbar-top">
+                        <div class="search-box">
+                            <span class="search-icon">🔍</span>
+                            <input type="text" placeholder="Buscar por nombre, marca o socket...">
+                        </div>
+                        <select class="sort-select">
+                            <option>Ordenar: destacados</option>
+                            <option>Menor precio</option>
+                            <option>Mayor precio</option>
+                        </select>
+                    </div>
+                    <div class="filters">
+                        <button class="filter-pill active">Todos</button>
+                        <button class="filter-pill">CPU</button>
+                        <button class="filter-pill">Placa madre</button>
+                        <button class="filter-pill">RAM</button>
+                        <button class="filter-pill">GPU</button>
+                        <button class="filter-pill">Fuente</button>
+                    </div>
+                </div>
+
+                <div class="cards-grid">
+                    
+                    <!-- Tarjeta 1 -->
+                    <div class="detail-card">
+                        <div class="card-img-placeholder">🔳</div>
+                        <div class="card-tag">PROCESADOR</div>
+                        <div class="card-title">AMD Ryzen 5 7600</div>
+                        <div class="card-specs">
+                            <span>Socket AM5</span>
+                            <span>6 núcleos · 12 hilos</span>
+                            <span class="card-power">⚡ TDP: 65 W</span>
+                        </div>
+                        <button class="btn-card">Cambiar</button>
+                    </div>
+
+                    <!-- Tarjeta 2 -->
+                    <div class="detail-card">
+                        <div class="card-img-placeholder" style="color: #58a6ff;">🔳</div>
+                        <div class="card-tag">PROCESADOR</div>
+                        <div class="card-title">Intel Core i5-12400F</div>
+                        <div class="card-specs">
+                            <span>Socket LGA 1700</span>
+                            <span>6 núcleos · 12 hilos</span>
+                            <span class="card-power">⚡ Potencia base: 65 W</span>
+                        </div>
+                        <button class="btn-card">Cambiar</button>
+                    </div>
+
+                    <!-- Tarjeta 3 -->
+                    <div class="detail-card">
+                        <div class="card-img-placeholder">🎛️</div>
+                        <div class="card-tag">PLACA MADRE</div>
+                        <div class="card-title">MSI PRO B650M-P</div>
+                        <div class="card-specs">
+                            <span>Socket AM5 · DDR5</span>
+                            <span>Micro-ATX · PCIe 4.0</span>
+                            <span class="card-power">⚡ Consumo aprox.: 30 W</span>
+                        </div>
+                        <button class="btn-card">Cambiar</button>
+                    </div>
+
+                    <!-- Tarjeta 4 -->
+                    <div class="detail-card">
+                        <div class="card-img-placeholder">▤</div>
+                        <div class="card-tag">MEMORIA RAM</div>
+                        <div class="card-title">Kingston FURY Beast 16 GB</div>
+                        <div class="card-specs">
+                            <span>DDR5 · 2 x 8 GB · 5200 MT/s</span>
+                            <span>Formato DIMM · CL40</span>
+                            <span class="card-power">⚡ Consumo aprox.: 8 W</span>
+                        </div>
+                        <button class="btn-card">+ Añadir</button>
+                    </div>
+
+                    <!-- Tarjeta 5 -->
+                    <div class="detail-card">
+                        <div class="card-img-placeholder">🎮</div>
+                        <div class="card-tag">TARJETA GRÁFICA</div>
+                        <div class="card-title">MSI GeForce RTX 4060</div>
+                        <div class="card-specs">
+                            <span>8 GB GDDR6 · PCIe 4.0</span>
+                            <span>Ventus 2X · Doble ventilador</span>
+                            <span class="card-power">⚡ Potencia gráfica: 115 W</span>
+                        </div>
+                        <button class="btn-card">Cambiar</button>
+                    </div>
+
+                    <!-- Tarjeta 6 -->
+                    <div class="detail-card">
+                        <div class="card-img-placeholder">🔌</div>
+                        <div class="card-tag">FUENTE DE ALIMENTACIÓN</div>
+                        <div class="card-title">Corsair CX550</div>
+                        <div class="card-specs">
+                            <span>550 W · 80 PLUS Bronze</span>
+                            <span>Formato ATX · No modular</span>
+                            <span class="card-power">⚡ Entrega: 550 W · No suma TDP</span>
+                        </div>
+                        <button class="btn-card">Cambiar</button>
+                    </div>
+
+                </div>
+
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                    ⓘ Precios de referencia en USD. El consumo de RAM y placa madre es aproximado; la fuente indica su capacidad.
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div>BUILDLAB / CONFIGURACIÓN LIBRE</div>
+        <div class="footer-right">
+            <div class="footer-dot"></div>
+            Tu próximo armado empieza con una pieza
+        </div>
+    </footer>
+    
+    <script>
+        // 1. Simulación de la Base de Datos JSON (Endpoints del backend)
+        const pcsUsuario = [
+            {
+                id: 1,
+                nombre: "Pc master race",
+                descripcion: "Se actualiza al añadir componentes.",
+                icono: "⚡",
+                recomendacionWatts: "Fuente recomendada: 500W",
+                componentes: [
+                    { tipo: "Procesador (CPU)", nombre: "AMD Ryzen 5 7600", icono: "🔳", cantidad: 1 },
+                    { tipo: "Placa Madre (Motherboard)", nombre: "MSI PRO B650M-P", icono: "🎛️", cantidad: 1 },
+                    { tipo: "Memoria RAM", nombre: "Kingston FURY Beast 16 GB", icono: "▤", cantidad: 2 },
+                    { tipo: "Tarjeta Gráfica (GPU)", nombre: "MSI GeForce RTX 4060", icono: "🎮", cantidad: 1 },
+                    { tipo: "Fuente (PSU)", nombre: "Corsair CX550", icono: "🔌", cantidad: 1 }
+                ]
+            },
+            {
+                id: 2,
+                nombre: "PC Oficina Básica",
+                descripcion: "Armado económico para tareas diarias.",
+                icono: "💼",
+                recomendacionWatts: "Fuente recomendada: 300W",
+                componentes: [
+                    { tipo: "Procesador (CPU)", nombre: "Intel Core i3-12100", icono: "🔳", cantidad: 1 },
+                    { tipo: "Placa Madre (Motherboard)", nombre: "ASUS H610M-E", icono: "🎛️", cantidad: 1 },
+                    { tipo: "Memoria RAM", nombre: "Corsair Vengeance 8 GB", icono: "▤", cantidad: 1 },
+                    { tipo: "Almacenamiento", nombre: "Kingston NV2 500GB", icono: "💽", cantidad: 1 }
+                ]
+            }
+        ];
+
+        const limintePcs = 5;
+        let pcActualId = pcsUsuario[0].id;
+
+        // Elementos del DOM
+        const contadorPcs = document.getElementById('contador-pcs');
+        const contenedorComponentes = document.getElementById('contenedor-componentes');
+        
+        const btnSelector = document.getElementById('btn-selector');
+        const menuPcs = document.getElementById('menu-pcs');
+        const selectorArrow = document.getElementById('selector-arrow');
+        const selectorIcon = document.getElementById('selector-icon');
+        const selectorName = document.getElementById('selector-name');
+        const selectorDesc = document.getElementById('selector-desc');
+        const recomendacionFuente = document.getElementById('recomendacion-fuente');
+
+        // 2. Lógica de inicialización
+        function inicializarDatos() {
+            contadorPcs.innerText = `${pcsUsuario.length} / ${limintePcs} pc's`;
+            
+            // Llenar el menú desplegable con las opciones del JSON
+            menuPcs.innerHTML = '';
+            pcsUsuario.forEach(pc => {
+                const itemHTML = `
+                    <div class="dropdown-item" onclick="seleccionarPC(${pc.id})">
+                        <div class="dropdown-item-title"><span>${pc.icono}</span> ${pc.nombre}</div>
+                        <div class="dropdown-item-desc">${pc.descripcion}</div>
+                    </div>
+                `;
+                menuPcs.innerHTML += itemHTML;
+            });
+
+            // Cargar la primera PC por defecto
+            seleccionarPC(pcsUsuario[0].id);
+        }
+
+        // 3. Función para cambiar de PC y renderizar sus componentes
+        window.seleccionarPC = function(id) {
+            const pcSeleccionada = pcsUsuario.find(pc => pc.id === id);
+            if(!pcSeleccionada) return;
+
+            pcActualId = id;
+
+            // Actualizar textos del selector
+            selectorIcon.innerText = pcSeleccionada.icono;
+            selectorName.innerText = pcSeleccionada.nombre;
+            selectorDesc.innerText = pcSeleccionada.descripcion;
+            recomendacionFuente.innerText = pcSeleccionada.recomendacionWatts;
+
+            // Renderizar la lista de componentes de esa PC
+            contenedorComponentes.innerHTML = '';
+            pcSeleccionada.componentes.forEach(comp => {
+                const compHTML = `
+                    <div class="comp-item">
+                        <div class="comp-icon-small">${comp.icono}</div>
+                        <div class="comp-info">
+                            <div class="comp-type">${comp.tipo}</div>
+                            <div class="comp-name">${comp.nombre}</div>
+                        </div>
+                        <div class="comp-qty">${comp.cantidad}</div>
+                    </div>
+                `;
+                contenedorComponentes.innerHTML += compHTML;
+            });
+
+            // Cerrar el menú si estaba abierto
+            cerrarMenu();
+        }
+
+        // 4. Lógica de interacción del Dropdown
+        btnSelector.addEventListener('click', () => {
+            menuPcs.classList.toggle('active');
+            selectorArrow.style.transform = menuPcs.classList.contains('active') ? 'rotate(180deg)' : 'rotate(0deg)';
+        });
+
+        function cerrarMenu() {
+            menuPcs.classList.remove('active');
+            selectorArrow.style.transform = 'rotate(0deg)';
+        }
+
+        // Cerrar menú al hacer clic fuera
+        document.addEventListener('click', (evento) => {
+            if (!btnSelector.contains(evento.target) && !menuPcs.contains(evento.target)) {
+                cerrarMenu();
+            }
+        });
+
+        // Ejecutar al cargar la página
+        document.addEventListener('DOMContentLoaded', inicializarDatos);
+    </script>
+</body>
+</html>
