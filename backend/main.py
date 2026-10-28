@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.controllers.pc_controller import router as pc_router
 
 app = FastAPI(
@@ -7,7 +8,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Registramos el router del controlador de compatibilidad
+# Habilitar CORS para permitir peticiones desde el frontend en localhost
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite llamados desde cualquier origen en desarrollo (Live Server, etc.)
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],
+)
+
+# Registramos el router del controlador
 app.include_router(pc_router)
 
 @app.get("/")
