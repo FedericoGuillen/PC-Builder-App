@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>BuildLab | Guías de Componentes</title>
+
+<style>
+
+/* =========================
+   CONFIGURACIÓN GENERAL
+========================= */
+
+:root {
+    --bg-dark: #070b11;
+    --bg-card: #0f1926;
+    --accent-blue: #58a6ff;
+    --text-main: #ffffff;
+    --text-muted: #8b9bad;
+    --border-color: #25394d;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 100vh;
+    overflow-x: hidden;
+
+    background-image:
+        radial-gradient(circle at 50% 35%,
+        rgba(15, 45, 75, 0.45), transparent 65%);
+}
+
+/* =========================
+   FONDO DECORATIVO
+========================= */
+
+.background-effects {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+
+    background:
+        radial-gradient(circle at 10% 20%,
+        rgba(0, 100, 255, 0.10), transparent 30%),
+        radial-gradient(circle at 90% 80%,
+        rgba(0, 70, 200, 0.10), transparent 35%);
+}
+
+.circuit {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    opacity: 0.35;
+
+    background:
+        linear-gradient(135deg, transparent 48%,
+        #0066b9 48.2%, transparent 48.5%),
+
+        linear-gradient(135deg, transparent 62%,
+        #003b77 62.2%, transparent 62.5%),
+
+        linear-gradient(135deg, transparent 75%,
+        #00519b 75.2%, transparent 75.5%);
+}
+
+.circuit-left {
+    top: -150px;
+    left: -250px;
+}
+
+.circuit-right {
+    bottom: -250px;
+    right: -250px;
+    transform: rotate(180deg);
+}
+
+.glow {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: #008cff;
+    border-radius: 50%;
+
+    box-shadow: 0 0 15px #008cff;
+}
+
+.glow-1 { top: 25%; left: 12%; }
+.glow-2 { top: 40%; right: 12%; }
+.glow-3 { bottom: 20%; left: 20%; }
+.glow-4 { bottom: 30%; right: 15%; }
+
+/* =========================
+   NAVBAR
+========================= */
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 18px 40px;
+
+    background: rgba(9, 16, 25, 0.88);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+
+    backdrop-filter: blur(10px);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-icon {
+    width: 34px;
+    height: 34px;
+
+    background: #10263a;
+    border: 1px solid var(--accent-blue);
+    border-radius: 8px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    color: var(--accent-blue);
+}
+
+.brand-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: 0.2s;
+}
+
+.nav-link:hover {
+    color: white;
+}
+
+.nav-link.active {
+    color: var(--accent-blue);
+}
+
+.btn-back {
+    background: #111d2b;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+
+    padding: 9px 15px;
+
+    color: #dce8f5;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.2s;
+}
+
+.btn-back:hover {
+    border-color: var(--accent-blue);
+    background: #172b40;
+}
+
+/* =========================
+   CONTENIDO PRINCIPAL
+========================= */
+
+main {
+    width: 100%;
+    max-width: 1150px;
+
+    margin: auto;
+    padding: 55px 25px 65px;
+}
+
+.intro {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.pre-title {
+    color: var(--accent-blue);
+    font-family: monospace;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    margin-bottom: 15px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 13px;
+}
+
+h1 span {
+    color: var(--accent-blue);
+}
+
+.intro p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 650px;
+    margin: auto;
+}
+
+/* =========================
+   BUSCADOR
+========================= */
+
+.search-container {
+    max-width: 450px;
+    margin: 0 auto 35px;
+    position: relative;
+}
+
+.search-container svg {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #718ba5;
+}
+
+.search-container input {
+    width: 100%;
+    height: 43px;
+
+    background: rgba(12, 23, 36, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+
+    padding: 0 15px 0 43px;
+
+    color: white;
+    outline: none;
+    font-size: 0.85rem;
+}
+
+.search-container input:focus {
+    border-color: var(--accent-blue);
+}
+
+/* =========================
+   TARJETAS
+========================= */
+
+.components-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.component-card {
+    background: rgba(15, 25, 38, 0.88);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+
+    padding: 22px;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 205px;
+
+    text-align: left;
+
+    transition: all 0.25s ease;
+}
+
+.component-card:hover {
+    transform: translateY(-5px);
+    border-color: #368ed0;
+
+    box-shadow:
+        0 8px 30px rgba(0, 110, 220, 0.10),
+        inset 0 0 20px rgba(0, 110, 220, 0.03);
+}
+
+.card-top {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-bottom: 15px;
+}
+
+.component-icon {
+    width: 43px;
+    height: 43px;
+    flex-shrink: 0;
+
+    background: #10263a;
+    border: 1px solid #234967;
+    border-radius: 8px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #65baff;
+}
+
+.component-icon svg {
+    width: 23px;
+    height: 23px;
+}
+
+.component-card h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+.component-card p {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.card-link {
+    margin-top: auto;
+
+    color: var(--accent-blue);
+    font-size: 0.82rem;
+    font-weight: 600;
+
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    transition: 0.2s;
+}
+
+.card-link:hover {
+    color: #9bd3ff;
+    gap: 12px;
+}
+
+/* =========================
+   MENSAJE INFORMATIVO
+========================= */
+
+.info-box {
+    margin-top: 35px;
+
+    background: rgba(15, 40, 62, 0.45);
+    border: 1px solid #214665;
+    border-radius: 8px;
+
+    padding: 17px 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.info-icon {
+    color: var(--accent-blue);
+    font-size: 22px;
+}
+
+.info-box p {
+    color: #a9bdd1;
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    min-height: 38px;
+
+    background: rgba(9, 16, 25, 0.9);
+    border-top: 1px solid #0878b9;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 10px 30px;
+
+    color: #8297ac;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+}
+
+.status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: 0;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    background: #3fb950;
+    border-radius: 50%;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 850px) {
+    .components-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    nav {
+        padding: 16px 20px;
+    }
+}
+
+@media (max-width: 550px) {
+    .components-grid {
+        grid-template-columns: 1fr;
+    }
+
+    nav {
+        padding: 14px;
+    }
+
+    .nav-right {
+        gap: 10px;
+    }
+
+    .nav-link {
+        font-size: 0.8rem;
+    }
+
+    h1 {
+        font-size: 1.9rem;
+    }
+
+    main {
+        padding: 40px 17px;
+    }
+
+    footer {
+        padding: 12px;
+        font-size: 0.6rem;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- FONDO -->
+<div class="background-effects">
+
+    <div class="circuit circuit-left"></div>
+    <div class="circuit circuit-right"></div>
+
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+    <div class="glow glow-4"></div>
+
+</div>
+
+<!-- NAVBAR -->
+<nav>
+
+    <div class="nav-left">
+
+        <div class="logo-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor"
+                 stroke-width="1.8">
+
+                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                <rect x="8" y="8" width="8" height="8"/>
+
+            </svg>
+        </div>
+
+        <span class="brand-name">BuildLab</span>
+
+    </div>
+
+    <div class="nav-right">
+
+        <a href="index.html" class="nav-link">Inicio</a>
+
+        <a href="guias-componentes.html"
+           class="nav-link active">Guías</a>
+
+        <button class="btn-back" onclick="history.back()">
+            ← Volver
+        </button>
+
+    </div>
+
+</nav>
+
+<!-- CONTENIDO -->
+<main>
+
+    <!-- ENCABEZADO -->
+    <section class="intro">
+
+        <div class="pre-title">
+            CENTRO DE APRENDIZAJE BUILDLAB
+        </div>
+
+        <h1>
+            Guías de <span>Componentes</span>
+        </h1>
+
+        <p>
+            Conocé las partes de una computadora, descubrí para qué
+            sirve cada componente y aprendé qué tener en cuenta
+            antes de elegirlos para tu próximo armado.
+        </p>
+
+    </section>
+
+    <!-- BUSCADOR -->
+    <div class="search-container">
+
+        <svg width="18" height="18" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor"
+             stroke-width="2">
+
+            <circle cx="11" cy="11" r="7"/>
+            <path d="m16 16 4 4"/>
+
+        </svg>
+
+        <input
+            type="text"
+            id="componentSearch"
+            placeholder="Buscar un componente..."
+        >
+
+    </div>
+
+    <!-- TARJETAS -->
+    <section class="components-grid" id="componentsGrid">
+
+        <!-- MOTHERBOARD -->
+        <article class="component-card" data-name="motherboard placa madre">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <rect x="8" y="8" width="8" height="8"/>
+                        <path d="M8 3v3M16 3v3M8 18v3M16 18v3"/>
+                        <path d="M3 8h3M3 16h3M18 8h3M18 16h3"/>
+
+                    </svg>
+                </div>
+
+                <h2>Motherboard</h2>
+
+            </div>
+
+            <p>
+                La placa principal que conecta y permite la comunicación
+                entre todos los componentes de la PC.
+            </p>
+
+            <a href="guia-detalle.html?componente=motherboard"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- FUENTE -->
+        <article class="component-card" data-name="fuente de poder alimentacion">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="3" y="4" width="18" height="16" rx="2"/>
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 7v5l3 2"/>
+
+                    </svg>
+                </div>
+
+                <h2>Fuente de poder</h2>
+
+            </div>
+
+            <p>
+                Suministra energía eléctrica a todos los componentes
+                y debe tener potencia suficiente para el equipo.
+            </p>
+
+            <a href="guia-detalle.html?componente=fuente"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- DISIPADORES -->
+        <article class="component-card" data-name="disipadores refrigeracion cooler">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 9c-2-6 4-8 5-5 1 2-2 4-2 5"/>
+                        <path d="M15 12c6-2 8 4 5 5-2 1-4-2-5-2"/>
+                        <path d="M12 15c2 6-4 8-5 5-1-2 2-4 2-5"/>
+                        <path d="M9 12c-6 2-8-4-5-5 2-1 4 2 5 2"/>
+
+                    </svg>
+                </div>
+
+                <h2>Disipadores</h2>
+
+            </div>
+
+            <p>
+                Ayudan a controlar la temperatura del procesador
+                y otros componentes mediante refrigeración.
+            </p>
+
+            <a href="guia-detalle.html?componente=disipadores"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- PROCESADORES -->
+        <article class="component-card" data-name="procesador cpu">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="6" y="6" width="12" height="12" rx="2"/>
+                        <rect x="9" y="9" width="6" height="6"/>
+
+                        <path d="M9 2v4M15 2v4M9 18v4M15 18v4"/>
+                        <path d="M2 9h4M2 15h4M18 9h4M18 15h4"/>
+
+                    </svg>
+                </div>
+
+                <h2>Procesadores</h2>
+
+            </div>
+
+            <p>
+                Es el cerebro de la computadora: ejecuta instrucciones
+                y procesa las tareas del sistema.
+            </p>
+
+            <a href="guia-detalle.html?componente=procesadores"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- CABLEADO Y GABINETE -->
+        <article class="component-card" data-name="cableado gabinete cables">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="5" y="3" width="14" height="18" rx="2"/>
+                        <circle cx="12" cy="8" r="2"/>
+                        <path d="M9 15h6M9 18h6"/>
+
+                    </svg>
+                </div>
+
+                <h2>Cableado y gabinete</h2>
+
+            </div>
+
+            <p>
+                El gabinete aloja los componentes y el cableado
+                permite conectarlos correctamente.
+            </p>
+
+            <a href="guia-detalle.html?componente=gabinete"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- PERIFÉRICOS -->
+        <article class="component-card" data-name="perifericos teclado mouse monitor auriculares">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <path d="M6 9h1M10 9h1M14 9h1M18 9h1"/>
+                        <path d="M6 13h12M9 16h6"/>
+
+                    </svg>
+                </div>
+
+                <h2>Periféricos</h2>
+
+            </div>
+
+            <p>
+                Dispositivos externos como teclado, mouse, monitor
+                y auriculares que permiten interactuar con la PC.
+            </p>
+
+            <a href="guia-detalle.html?componente=perifericos"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- RAM -->
+        <article class="component-card" data-name="memoria ram memorias">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="3" y="6" width="18" height="12" rx="2"/>
+                        <path d="M7 6v7M11 6v7M15 6v7M19 6v7"/>
+                        <path d="M6 18v3M10 18v3M14 18v3M18 18v3"/>
+
+                    </svg>
+                </div>
+
+                <h2>Memorias RAM</h2>
+
+            </div>
+
+            <p>
+                Almacenan temporalmente los datos que utiliza
+                el procesador mientras ejecuta tareas.
+            </p>
+
+            <a href="guia-detalle.html?componente=memorias-ram"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- CMOS -->
+        <article class="component-card" data-name="pila cmos bateria">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="4" y="7" width="16" height="10" rx="2"/>
+                        <path d="M8 4v3M16 4v3"/>
+                        <path d="M12 9v6M9 12h6"/>
+
+                    </svg>
+                </div>
+
+                <h2>Pila CMOS</h2>
+
+            </div>
+
+            <p>
+                Mantiene el reloj del sistema y ciertos ajustes
+                de configuración de la BIOS cuando la PC está apagada.
+            </p>
+
+            <a href="guia-detalle.html?componente=cmos"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- REDES Y AUDIO -->
+        <article class="component-card" data-name="redes audio wifi sonido">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <path d="M5 9a11 11 0 0 1 14 0"/>
+                        <path d="M8 12a6 6 0 0 1 8 0"/>
+                        <path d="M11 15a2 2 0 0 1 2 0"/>
+                        <path d="M12 18h.01"/>
+                        <path d="M3 4h18"/>
+
+                    </svg>
+                </div>
+
+                <h2>Redes y audio</h2>
+
+            </div>
+
+            <p>
+                Permiten conectar la computadora a internet
+                y gestionar la entrada y salida de sonido.
+            </p>
+
+            <a href="guia-detalle.html?componente=redes-audio"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- GPU -->
+        <article class="component-card" data-name="tarjeta grafica gpu video">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="2" y="5" width="20" height="14" rx="2"/>
+                        <circle cx="9" cy="12" r="4"/>
+                        <circle cx="9" cy="12" r="1"/>
+                        <path d="M16 9h3M16 12h3M16 15h3"/>
+
+                    </svg>
+                </div>
+
+                <h2>Tarjeta gráfica</h2>
+
+            </div>
+
+            <p>
+                Procesa y genera las imágenes que aparecen
+                en el monitor. Es fundamental para videojuegos.
+            </p>
+
+            <a href="guia-detalle.html?componente=tarjeta-grafica"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+        <!-- ALMACENAMIENTO -->
+        <article class="component-card" data-name="almacenamiento ssd hdd nvme disco">
+
+            <div class="card-top">
+
+                <div class="component-icon">
+                    <svg viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="1.6">
+
+                        <rect x="4" y="3" width="16" height="18" rx="2"/>
+                        <circle cx="12" cy="12" r="4"/>
+                        <circle cx="12" cy="12" r="1"/>
+                        <path d="M8 18h8"/>
+
+                    </svg>
+                </div>
+
+                <h2>Almacenamiento</h2>
+
+            </div>
+
+            <p>
+                Guarda permanentemente el sistema operativo,
+                programas, archivos y videojuegos.
+            </p>
+
+            <a href="guia-detalle.html?componente=almacenamiento"
+               class="card-link">
+                Ver guía <span>→</span>
+            </a>
+
+        </article>
+
+    </section>
+
+    <!-- MENSAJE INFORMATIVO -->
+    <div class="info-box">
+
+        <div class="info-icon">ⓘ</div>
+
+        <p>
+            <strong>¿No sabés por dónde empezar?</strong>
+            Podés explorar los componentes uno por uno.
+            Cada guía está pensada para explicar los conceptos
+            de forma sencilla, incluso si nunca armaste una PC.
+        </p>
+
+    </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+
+    <span>BUILDLAB / CENTRO DE APRENDIZAJE</span>
+
+    <div class="status">
+        <div class="status-dot"></div>
+        Tu banco de trabajo está listo
+    </div>
+
+</footer>
+
+<!-- =========================
+     JAVASCRIPT
+========================= -->
+
+<script>
+
+// BUSCADOR DE COMPONENTES
+
+const searchInput = document.getElementById("componentSearch");
+
+const componentCards = document.querySelectorAll(".component-card");
+
+searchInput.addEventListener("input", function() {
+
+    const searchText = this.value
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+
+    componentCards.forEach(card => {
+
+        const componentName = card.dataset.name
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        const componentTitle = card.querySelector("h2").textContent
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        if (
+            componentName.includes(searchText) ||
+            componentTitle.includes(searchText)
+        ) {
+            card.style.display = "flex";
+        } else {
+            card.style.display = "none";
+        }
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>
