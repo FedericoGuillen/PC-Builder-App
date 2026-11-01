@@ -1,0 +1,668 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildLab | Guía de componentes</title>
+
+<style>
+:root {
+    --bg: #070b11;
+    --card: #0f1926;
+    --blue: #58a6ff;
+    --text: #ffffff;
+    --muted: #9aabba;
+    --border: #25394d;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at 50% 25%, rgba(20,75,120,.22), transparent 55%),
+        var(--bg);
+    color: var(--text);
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 40px;
+    background: rgba(9,16,25,.9);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.logo {
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--blue);
+    border-radius: 8px;
+    color: var(--blue);
+    background: #10263a;
+}
+
+nav a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: .9rem;
+}
+
+main {
+    max-width: 1050px;
+    margin: auto;
+    padding: 45px 25px 65px;
+}
+
+.back {
+    display: inline-block;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .85rem;
+    margin-bottom: 30px;
+}
+
+.back:hover {
+    color: var(--blue);
+}
+
+.header {
+    margin-bottom: 30px;
+}
+
+.category {
+    color: var(--blue);
+    font-family: monospace;
+    letter-spacing: 3px;
+    font-size: .75rem;
+    margin-bottom: 12px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+
+.subtitle {
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 700px;
+}
+
+.hero {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.visual {
+    min-height: 260px;
+    background: linear-gradient(145deg, #142b40, #0b1420);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
+    padding: 25px;
+    text-align: center;
+}
+
+.visual-icon {
+    font-size: 85px;
+    filter: drop-shadow(0 0 20px rgba(88,166,255,.3));
+}
+
+.visual small {
+    color: var(--muted);
+    font-size: .75rem;
+}
+
+.intro-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 27px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.intro-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 13px;
+}
+
+.intro-card p {
+    color: var(--muted);
+    line-height: 1.8;
+    font-size: .9rem;
+}
+
+.sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+}
+
+.section-card {
+    background: rgba(15,25,38,.9);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 23px;
+}
+
+.section-card h2 {
+    color: var(--blue);
+    font-size: 1.05rem;
+    margin-bottom: 13px;
+}
+
+.section-card p,
+.section-card li {
+    color: var(--muted);
+    font-size: .87rem;
+    line-height: 1.8;
+}
+
+.section-card ul {
+    padding-left: 20px;
+}
+
+.tip {
+    margin-top: 20px;
+    padding: 22px;
+    border: 1px solid #24527a;
+    border-left: 3px solid var(--blue);
+    background: rgba(15,40,62,.5);
+    border-radius: 8px;
+}
+
+.tip h2 {
+    color: var(--blue);
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.tip p {
+    color: #b5c6d7;
+    font-size: .88rem;
+    line-height: 1.8;
+}
+
+footer {
+    padding: 18px;
+    text-align: center;
+    color: #8297ac;
+    font-size: .7rem;
+    border-top: 1px solid #0878b9;
+    letter-spacing: 1px;
+}
+
+@media(max-width: 700px) {
+    nav {
+        padding: 15px 20px;
+    }
+
+    main {
+        padding: 30px 17px 45px;
+    }
+
+    .hero,
+    .sections {
+        grid-template-columns: 1fr;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .visual {
+        min-height: 190px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+    <div class="brand">
+        <div class="logo">▦</div>
+        <span>BuildLab</span>
+    </div>
+
+    <a href="guias-componentes.html">Guías de componentes</a>
+</nav>
+
+<main>
+
+    <a href="guias-componentes.html" class="back">
+        ← Volver a todas las guías
+    </a>
+
+    <header class="header">
+        <div class="category">CENTRO DE APRENDIZAJE / HARDWARE</div>
+        <h1 id="title">Componente</h1>
+        <p class="subtitle" id="subtitle"></p>
+    </header>
+
+    <section class="hero">
+
+        <div class="visual">
+            <div class="visual-icon" id="visualIcon">🖥️</div>
+            <small>ILUSTRACIÓN DEL COMPONENTE</small>
+        </div>
+
+        <div class="intro-card">
+            <h2>¿Qué es?</h2>
+            <p id="what"></p>
+        </div>
+
+    </section>
+
+    <section class="sections">
+
+        <article class="section-card">
+            <h2>¿Para qué sirve?</h2>
+            <p id="function"></p>
+        </article>
+
+        <article class="section-card">
+            <h2>Tipos y características</h2>
+            <ul id="types"></ul>
+        </article>
+
+        <article class="section-card">
+            <h2>¿Qué tener en cuenta al elegirlo?</h2>
+            <ul id="considerations"></ul>
+        </article>
+
+        <article class="section-card">
+            <h2>Errores comunes</h2>
+            <ul id="mistakes"></ul>
+        </article>
+
+    </section>
+
+    <section class="tip">
+        <h2>✦ Consejo BuildLab</h2>
+        <p id="tip"></p>
+    </section>
+
+</main>
+
+<footer>
+    BUILDLAB / APRENDÉ. ELEGÍ. CONSTRUÍ.
+</footer>
+
+<script>
+
+const guides = {
+
+    "motherboard": {
+        title: "Motherboard",
+        subtitle: "La placa principal que conecta y comunica todos los componentes de tu computadora.",
+        icon: "🖥️",
+        what: "La motherboard o placa madre es la placa de circuito principal de una computadora. En ella se instalan o conectan el procesador, la memoria RAM, el almacenamiento y otros dispositivos.",
+        function: "Permite que todos los componentes se comuniquen entre sí. También distribuye energía a diferentes partes del equipo y ofrece conexiones externas como USB, audio y red.",
+        types: [
+            "ATX: formato de tamaño estándar, con más espacio y conexiones.",
+            "Micro-ATX: más compacta, habitual en equipos de uso general y gaming.",
+            "Mini-ITX: formato pequeño para computadoras compactas.",
+            "Los sockets AM4, AM5 y LGA determinan qué procesadores son compatibles."
+        ],
+        considerations: [
+            "Verificar que el socket sea compatible con el procesador.",
+            "Comprobar que admita el tipo de memoria RAM elegido.",
+            "Revisar el tamaño y compatibilidad con el gabinete.",
+            "Considerar las conexiones, ranuras M.2 y posibilidades de expansión."
+        ],
+        mistakes: [
+            "Comprar una motherboard con un socket incompatible.",
+            "Confundir DDR4 con DDR5: no son intercambiables.",
+            "No revisar si necesita una actualización de BIOS para reconocer el procesador."
+        ],
+        tip: "Elegí primero el procesador que querés utilizar y después buscá una motherboard compatible. No te guíes solamente por la apariencia o la cantidad de luces RGB."
+    },
+
+    "fuente": {
+        title: "Fuente de poder",
+        subtitle: "El componente encargado de suministrar energía a toda la computadora.",
+        icon: "🔌",
+        what: "La fuente de alimentación, también conocida como PSU, transforma la corriente eléctrica de la toma de pared en los voltajes que necesitan los componentes de la PC.",
+        function: "Alimenta al procesador, motherboard, tarjeta gráfica, discos y ventiladores. Una fuente de calidad ayuda a mantener una alimentación estable y protege el equipo ante determinadas fallas eléctricas.",
+        types: [
+            "ATX: formato tradicional para la mayoría de los gabinetes.",
+            "SFX: formato compacto para equipos pequeños.",
+            "Modular: permite conectar solamente los cables necesarios.",
+            "80 Plus Bronze, Gold y otros niveles: indican eficiencia energética bajo condiciones de certificación."
+        ],
+        considerations: [
+            "Calcular el consumo aproximado de todos los componentes.",
+            "Verificar la potencia recomendada para la tarjeta gráfica.",
+            "Elegir una marca y modelo de buena calidad.",
+            "Comprobar que tenga los conectores necesarios para CPU y GPU."
+        ],
+        mistakes: [
+            "Elegir una fuente únicamente por su cantidad de watts.",
+            "Comprar modelos de calidad dudosa para ahorrar dinero.",
+            "Utilizar cables modulares de otra fuente sin verificar compatibilidad."
+        ],
+        tip: "No es recomendable ahorrar demasiado en la fuente. Una buena PSU es una inversión en la seguridad y estabilidad de todo el equipo."
+    },
+
+    "disipadores": {
+        title: "Disipadores",
+        subtitle: "Sistemas encargados de controlar la temperatura de los componentes.",
+        icon: "❄️",
+        what: "Un disipador es un sistema de refrigeración que ayuda a retirar el calor generado por componentes como el procesador. Puede utilizar bloques metálicos, ventiladores o líquidos refrigerantes.",
+        function: "Evita que las temperaturas alcancen niveles excesivos. Una refrigeración adecuada permite mantener un funcionamiento estable y reducir la pérdida de rendimiento por temperatura.",
+        types: [
+            "Disipador por aire: utiliza un bloque metálico y uno o más ventiladores.",
+            "Refrigeración líquida AIO: utiliza un circuito cerrado con bomba, radiador y ventiladores.",
+            "Refrigeración pasiva: disipa calor sin utilizar ventiladores.",
+            "Pasta térmica: mejora la transferencia de calor entre el procesador y el disipador."
+        ],
+        considerations: [
+            "Verificar la compatibilidad con el socket del procesador.",
+            "Comprobar la altura máxima admitida por el gabinete.",
+            "Revisar el espacio disponible alrededor de la memoria RAM.",
+            "Considerar el nivel de ruido y la capacidad de refrigeración."
+        ],
+        mistakes: [
+            "Olvidar retirar el plástico protector de la base.",
+            "Instalar incorrectamente el disipador.",
+            "No aplicar correctamente la pasta térmica.",
+            "No conectar el ventilador a la conexión CPU_FAN."
+        ],
+        tip: "No necesitás refrigeración líquida para todas las computadoras. Un buen disipador por aire puede ser suficiente para muchos procesadores."
+    },
+
+    "procesadores": {
+        title: "Procesadores",
+        subtitle: "El cerebro de la computadora: ejecuta instrucciones y procesa información.",
+        icon: "🧠",
+        what: "El procesador, también llamado CPU, es el componente que interpreta y ejecuta instrucciones de los programas y del sistema operativo.",
+        function: "Realiza cálculos, administra tareas y coordina diferentes operaciones de la computadora. Su rendimiento influye en videojuegos, programas y actividades cotidianas.",
+        types: [
+            "AMD Ryzen: familias de procesadores de escritorio y portátiles.",
+            "Intel Core: familias Core y sus diferentes generaciones.",
+            "Núcleos: unidades que permiten ejecutar tareas de manera simultánea.",
+            "Hilos: unidades de procesamiento lógico que ayudan a gestionar tareas."
+        ],
+        considerations: [
+            "Verificar el socket y compatibilidad con la motherboard.",
+            "Revisar la generación y arquitectura del procesador.",
+            "Considerar cantidad de núcleos e hilos según el uso.",
+            "Comprobar consumo energético y refrigeración necesaria."
+        ],
+        mistakes: [
+            "Comprar un procesador incompatible con la placa madre.",
+            "Pensar que más GHz siempre significa mejor rendimiento.",
+            "Olvidar que algunos procesadores no incluyen gráficos integrados.",
+            "No considerar la refrigeración necesaria."
+        ],
+        tip: "Para elegir un procesador, pensá primero en qué vas a hacer con la PC: jugar, estudiar, editar videos o trabajar. No siempre necesitás el modelo más caro."
+    },
+
+    "gabinete": {
+        title: "Cableado y gabinete",
+        subtitle: "La estructura que protege, organiza y permite refrigerar los componentes.",
+        icon: "🗄️",
+        what: "El gabinete es la estructura donde se instalan los componentes de una computadora. El cableado incluye los cables de alimentación y conexión que permiten que todo funcione correctamente.",
+        function: "Protege los componentes, facilita su montaje y permite organizar el flujo de aire. Los cables conectan la fuente con la motherboard, GPU, discos y otros dispositivos.",
+        types: [
+            "Mid Tower: tamaño habitual para equipos ATX y Micro-ATX.",
+            "Full Tower: gabinetes grandes con mayor espacio de expansión.",
+            "Mini Tower: diseños compactos.",
+            "Panel frontal: puede incluir USB, audio y botones de encendido.",
+            "Cableado: incluye alimentación, datos SATA y conexiones del panel frontal."
+        ],
+        considerations: [
+            "Comprobar compatibilidad con el formato de motherboard.",
+            "Verificar el largo máximo de la tarjeta gráfica.",
+            "Revisar la altura máxima del disipador.",
+            "Considerar ventiladores, filtros antipolvo y espacio para cables."
+        ],
+        mistakes: [
+            "Comprar un gabinete demasiado pequeño.",
+            "Conectar incorrectamente los cables del panel frontal.",
+            "Obstruir las entradas y salidas de aire.",
+            "Dejar cables sueltos cerca de los ventiladores."
+        ],
+        tip: "Un gabinete con buen flujo de aire puede mejorar las temperaturas de todo el equipo. Priorizá una buena ventilación antes que la estética."
+    },
+
+    "perifericos": {
+        title: "Periféricos",
+        subtitle: "Los dispositivos que permiten interactuar con la computadora.",
+        icon: "⌨️",
+        what: "Los periféricos son dispositivos externos que se conectan a la computadora para introducir información, recibir resultados o realizar ambas funciones.",
+        function: "Permiten controlar el equipo, visualizar imágenes, escuchar sonidos y comunicarse con otros dispositivos.",
+        types: [
+            "Entrada: teclado, mouse, micrófono y webcam.",
+            "Salida: monitor, parlantes y auriculares.",
+            "Entrada y salida: pantallas táctiles y algunos dispositivos de almacenamiento.",
+            "Conexión: USB, HDMI, DisplayPort, Bluetooth y conexiones inalámbricas."
+        ],
+        considerations: [
+            "Elegir un monitor según resolución y frecuencia de actualización.",
+            "Comprobar la conexión y compatibilidad con la PC.",
+            "Considerar ergonomía y comodidad.",
+            "Evaluar calidad, durabilidad y necesidades de uso."
+        ],
+        mistakes: [
+            "Comprar un monitor sin revisar las conexiones disponibles.",
+            "Confundir la frecuencia del monitor con los FPS del juego.",
+            "Elegir periféricos solamente por su apariencia."
+        ],
+        tip: "Los periféricos también influyen mucho en la experiencia de uso. Un buen monitor, teclado y mouse pueden marcar una gran diferencia."
+    },
+
+    "memorias-ram": {
+        title: "Memorias RAM",
+        subtitle: "La memoria de trabajo donde se almacenan temporalmente los datos utilizados por el sistema.",
+        icon: "💾",
+        what: "La memoria RAM es un tipo de memoria rápida y temporal. Guarda los datos que el procesador necesita utilizar mientras los programas están funcionando.",
+        function: "Permite acceder rápidamente a información sin tener que buscarla constantemente en el almacenamiento. Al apagar la computadora, su contenido se pierde.",
+        types: [
+            "DDR3: generación anterior.",
+            "DDR4: utilizada en muchas computadoras actuales.",
+            "DDR5: generación más nueva, con mayores velocidades y otras mejoras.",
+            "DIMM: formato habitual para computadoras de escritorio.",
+            "SO-DIMM: formato compacto utilizado en notebooks."
+        ],
+        considerations: [
+            "Verificar si la motherboard utiliza DDR4 o DDR5.",
+            "Elegir una capacidad adecuada para el uso previsto.",
+            "Revisar frecuencia y latencia.",
+            "Considerar kits de dos módulos para aprovechar el doble canal."
+        ],
+        mistakes: [
+            "Intentar instalar DDR4 en una motherboard DDR5.",
+            "Comprar módulos sin revisar la compatibilidad.",
+            "No activar el perfil XMP o EXPO cuando corresponda.",
+            "Confundir GB de RAM con GB de almacenamiento."
+        ],
+        tip: "Para una PC de uso general y gaming, 16 GB pueden ser un punto de partida razonable. Si utilizás programas exigentes o muchos juegos, 32 GB pueden resultar convenientes."
+    },
+
+    "cmos": {
+        title: "Pila CMOS",
+        subtitle: "Una pequeña batería que ayuda a conservar el reloj y ciertos ajustes de la BIOS.",
+        icon: "🔋",
+        what: "La pila CMOS es una batería pequeña, generalmente de tipo CR2032, instalada en la motherboard. Mantiene alimentado el circuito del reloj y la memoria que conserva determinados ajustes del firmware.",
+        function: "Permite conservar la fecha, la hora y ciertos parámetros de configuración cuando la computadora está desconectada de la corriente.",
+        types: [
+            "CR2032: modelo de pila más habitual en computadoras de escritorio.",
+            "Pilas tipo botón: tienen forma circular y tamaño reducido.",
+            "Algunas motherboards pueden utilizar otros sistemas de alimentación o memoria."
+        ],
+        considerations: [
+            "Comprobar el modelo de batería indicado por el fabricante.",
+            "Revisar la polaridad al instalarla.",
+            "Consultar el manual de la motherboard.",
+            "Apagar y desconectar el equipo antes de manipularla."
+        ],
+        mistakes: [
+            "Colocar la pila con la polaridad incorrecta.",
+            "Manipularla con la computadora conectada a la corriente.",
+            "Pensar que cambiarla soluciona cualquier problema de arranque."
+        ],
+        tip: "Si la PC pierde la fecha y hora cada vez que se desconecta, puede ser una señal de que la pila necesita reemplazo."
+    },
+
+    "redes-audio": {
+        title: "Redes y audio",
+        subtitle: "Las conexiones que permiten comunicarse con internet y gestionar el sonido.",
+        icon: "📡",
+        what: "Son los componentes y circuitos encargados de gestionar la conectividad de red y las señales de audio de la computadora.",
+        function: "La parte de red permite conectarse a internet o a una red local. El audio permite reproducir sonidos y recibir señales de micrófonos.",
+        types: [
+            "Ethernet: conexión de red mediante cable.",
+            "Wi-Fi: conexión inalámbrica a una red.",
+            "Bluetooth: comunicación inalámbrica con periféricos compatibles.",
+            "Audio integrado: circuito de sonido incorporado en la motherboard.",
+            "Tarjetas dedicadas: permiten agregar o mejorar conexiones y sonido."
+        ],
+        considerations: [
+            "Comprobar si la motherboard incluye Wi-Fi y Bluetooth.",
+            "Revisar la velocidad de conexión Ethernet.",
+            "Considerar la versión de Wi-Fi disponible.",
+            "Verificar las conexiones de audio necesarias."
+        ],
+        mistakes: [
+            "Comprar una motherboard pensando que incluye Wi-Fi sin comprobarlo.",
+            "No instalar los controladores correspondientes.",
+            "Confundir una conexión Ethernet con una conexión Wi-Fi."
+        ],
+        tip: "Si tu PC está lejos del router, evaluá las opciones de conexión antes de comprar. Una conexión Ethernet suele ofrecer mayor estabilidad cuando es posible utilizarla."
+    },
+
+    "tarjeta-grafica": {
+        title: "Tarjeta gráfica",
+        subtitle: "El componente especializado en procesar y generar las imágenes que aparecen en pantalla.",
+        icon: "🎮",
+        what: "La tarjeta gráfica, también conocida como GPU, es un componente que procesa información visual y genera las imágenes que se muestran en el monitor.",
+        function: "Se encarga de renderizar videojuegos, imágenes, videos y gráficos. También puede acelerar determinadas tareas profesionales y de cálculo.",
+        types: [
+            "GPU integrada: viene incorporada en el procesador.",
+            "GPU dedicada: es una tarjeta independiente instalada en la motherboard.",
+            "VRAM: memoria propia de la tarjeta gráfica.",
+            "PCI Express: conexión utilizada por la mayoría de las tarjetas gráficas actuales."
+        ],
+        considerations: [
+            "Verificar el espacio disponible dentro del gabinete.",
+            "Comprobar la potencia y conectores de la fuente.",
+            "Evaluar la cantidad de VRAM y el rendimiento esperado.",
+            "Considerar la resolución y frecuencia del monitor."
+        ],
+        mistakes: [
+            "Comprar una GPU que no entra en el gabinete.",
+            "Utilizar una fuente insuficiente o de mala calidad.",
+            "Pensar que más VRAM siempre significa más rendimiento.",
+            "No comprobar los conectores de alimentación."
+        ],
+        tip: "La tarjeta gráfica debe elegirse en función de los juegos o programas que vas a utilizar y de la resolución de tu monitor. No siempre la más cara es la mejor opción."
+    },
+
+    "almacenamiento": {
+        title: "Almacenamiento",
+        subtitle: "El espacio donde se guardan el sistema operativo, los programas y todos tus archivos.",
+        icon: "💽",
+        what: "El almacenamiento es el componente que conserva los datos incluso cuando la computadora está apagada. Allí se guardan Windows, juegos, aplicaciones, documentos y archivos.",
+        function: "Permite almacenar información de manera permanente y cargarla cuando el sistema o los programas la necesitan.",
+        types: [
+            "HDD: disco mecánico con platos magnéticos; suele ofrecer mucha capacidad a bajo costo.",
+            "SSD SATA: unidad de estado sólido que utiliza conexión SATA.",
+            "SSD NVMe: unidad de estado sólido que utiliza PCI Express y suele alcanzar velocidades mayores.",
+            "M.2: formato físico utilizado por muchos SSD; no todos los M.2 son NVMe."
+        ],
+        considerations: [
+            "Evaluar cuánta capacidad necesitás.",
+            "Verificar las conexiones disponibles en la motherboard.",
+            "Comprobar si la ranura M.2 admite SATA, NVMe o ambos.",
+            "Considerar velocidad, precio y garantía."
+        ],
+        mistakes: [
+            "Confundir el formato M.2 con el protocolo NVMe.",
+            "Comprar un disco sin revisar la conexión compatible.",
+            "No dejar espacio libre suficiente para el sistema.",
+            "Pensar que un SSD aumenta directamente los FPS de todos los juegos."
+        ],
+        tip: "Un SSD para el sistema operativo mejora notablemente los tiempos de arranque y carga. Si instalás muchos videojuegos, considerá una capacidad de almacenamiento acorde a tus necesidades."
+    }
+
+};
+
+// OBTENER EL COMPONENTE SELECCIONADO
+
+const params = new URLSearchParams(window.location.search);
+const component = params.get("componente");
+
+const guide = guides[component];
+
+// MOSTRAR LA GUÍA
+
+if (guide) {
+
+    document.title = "BuildLab | " + guide.title;
+
+    document.getElementById("title").textContent = guide.title;
+    document.getElementById("subtitle").textContent = guide.subtitle;
+    document.getElementById("visualIcon").textContent = guide.icon;
+    document.getElementById("what").textContent = guide.what;
+    document.getElementById("function").textContent = guide.function;
+    document.getElementById("tip").textContent = guide.tip;
+
+    function fillList(id, items) {
+        const list = document.getElementById(id);
+
+        items.forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            list.appendChild(li);
+        });
+    }
+
+    fillList("types", guide.types);
+    fillList("considerations", guide.considerations);
+    fillList("mistakes", guide.mistakes);
+
+} else {
+
+    document.getElementById("title").textContent = "Guía no encontrada";
+
+    document.getElementById("subtitle").textContent =
+        "No pudimos encontrar la guía solicitada. Volvé al listado y seleccioná un componente.";
+
+    document.querySelector(".hero").style.display = "none";
+    document.querySelector(".sections").style.display = "none";
+    document.querySelector(".tip").style.display = "none";
+
+}
+
+</script>
+
+</body>
+</html>
