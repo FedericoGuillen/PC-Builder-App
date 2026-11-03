@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuildLab | Guías externas</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #070b11;
+            color: #e6edf3;
+            min-height: 100vh;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            background: #0b111b;
+            border-bottom: 1px solid #1d2b3a;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            color: #58a6ff;
+            text-decoration: none;
+            letter-spacing: 1px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            color: #c9d1d9;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #58a6ff;
+        }
+
+        /* CONTENIDO */
+        .container {
+            width: 85%;
+            max-width: 1100px;
+            margin: 60px auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 38px;
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            color: #8b949e;
+            font-size: 16px;
+        }
+
+        /* CATEGORIAS */
+        .categoria {
+            margin-bottom: 50px;
+        }
+
+        .categoria h2 {
+            font-size: 25px;
+            color: #e6edf3;
+            border-left: 4px solid #58a6ff;
+            padding-left: 15px;
+            margin-bottom: 25px;
+        }
+
+        .marcas {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        /* BOTONES DE MARCAS */
+        .marca-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            background: #0f1926;
+            border: 1px solid #26394d;
+            border-radius: 12px;
+            color: #e6edf3;
+            font-size: 18px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .marca-btn:hover {
+            background: #14263a;
+            border-color: #58a6ff;
+            transform: translateY(-4px);
+            box-shadow: 0 0 18px rgba(88, 166, 255, 0.15);
+            color: #58a6ff;
+        }
+
+        .marca-logo {
+            width: 35px;
+            height: 35px;
+            object-fit: contain;
+            margin-right: 12px;
+        }
+
+        /* FOOTER */
+        footer {
+            text-align: center;
+            padding: 30px;
+            margin-top: 60px;
+            border-top: 1px solid #1d2b3a;
+            color: #6e7681;
+            font-size: 14px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header h1 {
+                font-size: 30px;
+            }
+
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <a href="index.html" class="logo">BuildLab</a>
+
+        <div class="nav-links">
+            <a href="index.html">Inicio</a>
+            <a href="guias-componentes.html">Guías de componentes</a>
+        </div>
+    </nav>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="container">
+
+        <header class="header">
+            <h1>Guías externas</h1>
+            <p>Explorá información y recursos oficiales de los principales fabricantes.</p>
+        </header>
+
+        <!-- PROCESADORES -->
+        <section class="categoria">
+            <h2>Procesadores</h2>
+
+            <div class="marcas">
+
+                <a href="https://www.amd.com/" target="_blank" rel="noopener noreferrer" class="marca-btn">
+                    <img src="https://cdn.simpleicons.org/amd/ED1C24" alt="Logo AMD" class="marca-logo">
+                    AMD
+                </a>
+
+                <a href="https://www.intel.com/" target="_blank" rel="noopener noreferrer" class="marca-btn">
+                    <img src="https://cdn.simpleicons.org/intel/0071C5" alt="Logo Intel" class="marca-logo">
+                    Intel
+                </a>
+
+            </div>
+        </section>
+
+        <!-- TARJETAS GRAFICAS -->
+        <section class="categoria">
+            <h2>Tarjetas gráficas</h2>
+
+            <div class="marcas">
+
+                <div class="marcas">
+
+                    <a href="https://www.nvidia.com/" target="_blank" rel="noopener noreferrer" class="marca-btn">
+                        <img src="https://cdn.simpleicons.org/nvidia/76B900" alt="Logo NVIDIA" class="marca-logo">
+                        NVIDIA
+                    </a>
+
+                    <a href="https://www.amd.com/" target="_blank" rel="noopener noreferrer" class="marca-btn">
+                        <img src="https://cdn.simpleicons.org/amd/ED1C24" alt="Logo AMD" class="marca-logo">
+                        AMD
+                    </a>
+
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        BuildLab © 2026 | Proyecto educativo de armado de PC
+    </footer>
+
+</body>
+
+</html>
