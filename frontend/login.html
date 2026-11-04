@@ -592,18 +592,13 @@ function togglePassword(inputId, button) {
     }
 }
 
-document.getElementById("loginForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-    
-    // Cambia "perfil.html" por la interfaz principal a la que deba redirigir tras loguearse
-    window.location.href = "perfil.html";
-});
-
 document.getElementById("forgotPassword").addEventListener("click", function(event) {
     event.preventDefault();
     alert("Aquí se implementará la lógica para restablecer la contraseña.");
 });
 </script>
+
+<script type="module" src="js/auth.js?v=20261104"></script>
 
 </body>
 </html>

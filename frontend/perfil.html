@@ -28,6 +28,7 @@
         .logo-icon { width: 32px; height: 32px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 6px; display: flex; justify-content: center; align-items: center; color: var(--accent-blue); font-size: 1.2rem; }
         .nav-left span { color: white; font-size: 1rem; font-weight: 500; margin-left: 5px; }
         .nav-right a { text-decoration: none; }
+        .nav-right { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
         .btn-back { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-back:hover { background: var(--border-color); }
 
@@ -74,6 +75,19 @@
         .dropdown-item-desc { color: var(--text-muted); font-size: 0.75rem; margin-left: 20px; }
 
         .alert-green { background: rgba(63, 185, 80, 0.1); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 12px 15px; border-radius: 8px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+
+        /* --- Tarjeta de sesión del usuario --- */
+        .user-card { display: flex; align-items: center; gap: 12px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; }
+        .user-avatar { width: 38px; height: 38px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 50%; font-size: 1.1rem; color: var(--accent-blue); }
+        .user-data { flex: 1; min-width: 0; }
+        .user-name { color: white; font-size: 0.9rem; font-weight: 600; }
+        .user-email { color: var(--text-muted); font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-status { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 0.7rem; color: var(--accent-green); }
+        .user-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); }
+        .user-status.offline { color: var(--text-muted); }
+        .user-status.offline .dot { background: var(--text-muted); }
+        .btn-user-action { flex-shrink: 0; background: rgba(88, 166, 255, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; text-decoration: none; cursor: pointer; transition: 0.2s; }
+        .btn-user-action:hover { background: rgba(88, 166, 255, 0.2); }
 
         .comp-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
         .comp-item { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 15px; display: flex; align-items: center; gap: 12px; }
@@ -163,6 +177,20 @@
             
             <!-- PANEL IZQUIERDO: Lista de PC -->
             <aside class="panel panel-left">
+                <!-- DATOS DE SESIÓN -->
+                <div class="user-card">
+                    <div class="user-avatar">👤</div>
+                    <div class="user-data">
+                        <div class="user-name" id="perfil-nombre">Invitado</div>
+                        <div class="user-email" id="perfil-email">Sin correo registrado</div>
+                        <div class="user-status offline" id="perfil-estado">
+                            <span class="dot"></span>
+                            <span id="perfil-estado-texto">Sin sesión iniciada</span>
+                        </div>
+                    </div>
+                    <a class="btn-user-action" id="perfil-accion" href="login.html">Ingresar</a>
+                </div>
+
                 <div class="list-header">
                     <div class="list-header-title">
                         <span>🖥️</span> Lista de PC'S <span>=</span>
@@ -447,6 +475,62 @@
         // Ejecutar al cargar la página
         document.addEventListener('DOMContentLoaded', inicializarDatos);
     </script>
-    <script type="module" src="js/auth.js"></script>
+
+    <script type="module">
+        import { obtenerUsuarioActual, cerrarSesion } from './js/auth.js?v=20261104';
+
+        const nombre = document.getElementById('perfil-nombre');
+        const email = document.getElementById('perfil-email');
+        const estado = document.getElementById('perfil-estado');
+        const estadoTexto = document.getElementById('perfil-estado-texto');
+        const accion = document.getElementById('perfil-accion');
+
+        function renderizarCuenta() {
+            const usuario = obtenerUsuarioActual();
+
+            if (usuario) {
+                const nombreCompleto = [usuario.nombre, usuario.apellido]
+                    .filter(Boolean)
+                    .join(' ');
+
+                nombre.textContent = nombreCompleto || usuario.nombre || 'Usuario';
+                email.textContent = usuario.email || 'Sin correo registrado';
+                estado.classList.remove('offline');
+                estadoTexto.textContent = 'Sesión activa';
+                accion.textContent = 'Cerrar sesión';
+                accion.setAttribute('href', '#');
+                return;
+            }
+
+            nombre.textContent = 'Invitado';
+            email.textContent = 'Sin correo registrado';
+            estado.classList.add('offline');
+            estadoTexto.textContent = 'Sin sesión iniciada';
+            accion.textContent = 'Ingresar';
+            accion.setAttribute('href', 'login.html');
+        }
+
+        accion.addEventListener('click', (event) => {
+            if (!obtenerUsuarioActual()) return;
+
+            event.preventDefault();
+            cerrarSesion();
+            renderizarCuenta();
+        });
+
+        renderizarCuenta();
+        window.addEventListener('auth:cambio', renderizarCuenta);
+        window.addEventListener('storage', (event) => {
+            if (
+                event.key === 'auth_access_token'
+                || event.key === 'auth_usuario'
+                || event.key === null
+            ) {
+                renderizarCuenta();
+            }
+        });
+    </script>
+
+    <script type="module" src="js/auth.js?v=20261104"></script>
 </body>
 </html>

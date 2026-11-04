@@ -17,8 +17,9 @@ import { mostrarAlerta } from './ui.js';
 
 
 const API_AUTH = 'http://127.0.0.1:8000/api/v1/auth';
-const PAGINA_LOGIN = 'inicio-registro.html';
-const PAGINA_INICIO = 'index.html';
+const PAGINA_LOGIN = 'login.html';
+const PAGINA_REGISTRO = 'registro.html';
+const PAGINA_PERFIL = 'perfil.html';
 const EVENTO_SESION = 'auth:cambio';
 
 
@@ -240,7 +241,7 @@ function obtenerDestinoLogin() {
         return destino;
     }
 
-    return PAGINA_INICIO;
+    return PAGINA_PERFIL;
 }
 
 
@@ -313,6 +314,7 @@ function inicializarFormularioRegistro() {
         const nombreCompleto = form.querySelector('#fullName')?.value.trim() || '';
         const email = form.querySelector('#registerEmail')?.value.trim() || '';
         const password = form.querySelector('#registerPassword')?.value || '';
+        const confirmPassword = form.querySelector('#confirmPassword')?.value;
 
         const [nombre, ...resto] = nombreCompleto.split(/\s+/);
         const apellido = resto.join(' ') || null;
@@ -321,6 +323,14 @@ function inicializarFormularioRegistro() {
             mostrarErrorAuth(
                 alerta,
                 new AuthError('Completá tu nombre, correo y contraseña.')
+            );
+            return;
+        }
+
+        if (confirmPassword !== undefined && password !== confirmPassword) {
+            mostrarErrorAuth(
+                alerta,
+                new AuthError('Las contraseñas no coinciden.')
             );
             return;
         }
@@ -344,13 +354,22 @@ function inicializarFormularioRegistro() {
 
             form.reset();
 
-            // Deja el email cargado en el formulario de login.
+            // Si la vista es independiente (registro.html), vuelve al login.
             const loginForm = document.getElementById('loginForm');
+
+            if (!loginForm) {
+                window.setTimeout(() => {
+                    window.location.href = PAGINA_LOGIN;
+                }, 1200);
+                return;
+            }
+
+            // Deja el email cargado en el formulario de login.
             const loginEmail = document.getElementById('loginEmail');
             const loginPassword = document.getElementById('loginPassword');
 
             // Quita errores previos del formulario de login.
-            const alertaLogin = loginForm?.querySelector('.auth-alert');
+            const alertaLogin = loginForm.querySelector('.auth-alert');
             if (alertaLogin) ocultarAlerta(alertaLogin);
 
             if (loginEmail) loginEmail.value = email;
@@ -491,6 +510,9 @@ function crearMenuCuenta(usuario) {
             'padding: 0 4px 4px'
         ].join(';');
 
+        const perfil = crearEnlaceAuth('Mi Perfil', PAGINA_PERFIL);
+        perfil.style.padding = '8px 10px';
+
         const botonSalir = document.createElement('button');
         botonSalir.type = 'button';
         botonSalir.textContent = 'Cerrar Sesión';
@@ -509,12 +531,12 @@ function crearMenuCuenta(usuario) {
             cerrarSesion();
         });
 
-        menu.append(saludo, botonSalir);
+        menu.append(saludo, perfil, botonSalir);
     } else {
         const login = crearEnlaceAuth('Iniciar Sesión', PAGINA_LOGIN);
         const registro = crearEnlaceAuth(
             'Registrarse',
-            `${PAGINA_LOGIN}#registerForm`,
+            PAGINA_REGISTRO,
             true
         );
 
@@ -557,6 +579,9 @@ function crearAuthInline(usuario) {
             'white-space: nowrap'
         ].join(';');
 
+        const perfil = crearEnlaceAuth('Mi Perfil', PAGINA_PERFIL);
+        perfil.style.padding = '6px 10px';
+
         const botonSalir = document.createElement('button');
         botonSalir.type = 'button';
         botonSalir.textContent = 'Cerrar Sesión';
@@ -574,11 +599,11 @@ function crearAuthInline(usuario) {
             cerrarSesion();
         });
 
-        authNav.append(nombre, botonSalir);
+        authNav.append(nombre, perfil, botonSalir);
     } else {
         authNav.append(
             crearEnlaceAuth('Iniciar Sesión', PAGINA_LOGIN),
-            crearEnlaceAuth('Registrarse', `${PAGINA_LOGIN}#registerForm`, true)
+            crearEnlaceAuth('Registrarse', PAGINA_REGISTRO, true)
         );
     }
 

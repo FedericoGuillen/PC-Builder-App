@@ -645,22 +645,9 @@ function togglePassword(inputId, button) {
     }
 }
 
-document.getElementById("registerForm").addEventListener("submit", function(event) {
-    event.preventDefault();
-
-    const password = document.getElementById("registerPassword").value;
-    const confirmPassword = document.getElementById("confirmPassword").value;
-
-    if (password !== confirmPassword) {
-        alert("Error: Las contraseñas no coinciden. Por favor, verifica e inténtalo nuevamente.");
-        return; 
-    }
-
-    // Cambia "login.html" por el nombre exacto de tu archivo cuando lo crees
-    window.location.href = "login.html"; 
-});
-
 </script>
+
+<script type="module" src="js/auth.js?v=20261104"></script>
 
 </body>
 </html>
