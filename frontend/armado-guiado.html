@@ -394,65 +394,8 @@
 
     </main>
 
-<!-- SCRIPT DE INTERACTIVIDAD (DRAG AND DROP) -->
-    <script>
-        // 1. Seleccionamos los elementos de la página que van a interactuar
-        const cpuCard = document.querySelector('.component-card[draggable="true"]');
-        const dropzone = document.querySelector('.dropzone');
-        const wattsDisplay = document.querySelector('.stats-value');
-        const btnSiguiente = document.querySelector('.btn-next');
+    <script type="module" src="js/armado.js"></script>
 
-        // 2. Qué pasa cuando hacemos clic y empezamos a arrastrar la tarjeta
-        cpuCard.addEventListener('dragstart', (evento) => {
-            // Le ponemos una "etiqueta" invisible para saber qué estamos arrastrando
-            evento.dataTransfer.setData('text/plain', 'procesador-amd'); 
-            dropzone.style.borderColor = '#58a6ff'; // El borde del socket se pone azul para guiarte
-        });
-
-        // 3. Permitir que el cuadrado verde acepte que le suelten cosas encima
-        dropzone.addEventListener('dragover', (evento) => {
-            evento.preventDefault(); // Por defecto, HTML bloquea el "soltar". Esto lo desbloquea.
-            dropzone.style.backgroundColor = 'rgba(88, 166, 255, 0.2)'; // Se ilumina en azul al pasar por arriba
-        });
-
-        // 4. Si pasamos por arriba pero nos arrepentimos y salimos del cuadrado
-        dropzone.addEventListener('dragleave', () => {
-            dropzone.style.backgroundColor = 'rgba(63, 185, 80, 0.1)'; // Vuelve a su color verde original
-        });
-
-        // LA MAGIA: Qué pasa cuando soltamos el componente adentro del socket
-        dropzone.addEventListener('drop', (evento) => {
-            evento.preventDefault();
-            
-            const piezaArrastrada = evento.dataTransfer.getData('text/plain');
-
-            if (piezaArrastrada === 'procesador-amd') {
-                // A. Cambiamos el aspecto del socket para que parezca instalado
-                dropzone.style.border = '1px solid #30363d'; /* Borde de componente encastrado */
-                dropzone.style.backgroundColor = '#161b22'; /* Fondo oscuro sólido de la tarjeta */
-                dropzone.style.animation = 'none'; /* Se apaga el pulso */
-                
-                // Rediseñamos el interior del dropzone para mostrar el CPU instalado
-                dropzone.innerHTML = `
-                    <div style="font-size: 2rem; margin-bottom: 5px;">🔳</div>
-                    <div style="font-weight: bold; color: white; font-size: 0.85rem;">Ryzen 5 7600</div>
-                    <div style="font-size:0.65rem; color:#3fb950; font-weight: 600; margin-top:4px;">✔ INSTALADO</div>
-                `;
-
-                // B. Actualizamos el consumo de energía (Stats)
-                wattsDisplay.innerHTML = '65 <span>Watts en uso / 650 W</span>';
-
-                // C. Apagamos la tarjeta en el inventario
-                cpuCard.setAttribute('draggable', 'false');
-                cpuCard.classList.add('component-card-inactive');
-                cpuCard.style.cursor = 'default';
-
-                // D. Habilitamos visualmente el botón Siguiente
-                btnSiguiente.style.boxShadow = '0 0 20px rgba(88, 166, 255, 0.6)';
-                btnSiguiente.style.transform = 'scale(1.02)';
-            }
-        });
-    </script>
-
+    <script type="module" src="js/auth.js"></script>
 </body>
 </html>

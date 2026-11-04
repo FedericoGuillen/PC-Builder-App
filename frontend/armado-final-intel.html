@@ -380,45 +380,7 @@
         </div>
     </main>
 
-    <script>
-        const btnEncender = document.getElementById('btn-encender');
-        const canvasChasis = document.getElementById('canvas-chasis');
-        const statsBox = document.getElementById('stats-box');
-        const statusText = document.getElementById('status-text');
-        const wattsNumber = document.getElementById('watts-number');
-        const wattsMax = document.getElementById('watts-max');
-
-        let isPowerOn = false;
-
-        btnEncender.addEventListener('click', () => {
-            isPowerOn = !isPowerOn;
-            
-            if (isPowerOn) {
-                // UI: Estado Encendido
-                canvasChasis.classList.add('powered-on');
-                btnEncender.classList.add('on');
-                btnEncender.innerHTML = '⏻ Apagar PC';
-                
-                // Actualizar Panel de Consumo
-                statsBox.style.borderColor = 'var(--accent-blue)';
-                statusText.innerHTML = '● ENCENDIDO';
-                statusText.style.color = 'var(--accent-green)';
-                wattsNumber.innerHTML = '200';
-                wattsMax.style.color = 'var(--accent-green)';
-            } else {
-                // UI: Estado Apagado
-                canvasChasis.classList.remove('powered-on');
-                btnEncender.classList.remove('on');
-                btnEncender.innerHTML = '⚡ Encender PC';
-                
-                // Restaurar Panel de Consumo
-                statsBox.style.borderColor = 'var(--border-color)';
-                statusText.innerHTML = '● APAGADO';
-                statusText.style.color = 'var(--text-muted)';
-                wattsNumber.innerHTML = '0';
-                wattsMax.style.color = 'var(--text-muted)';
-            }
-        });
-    </script>
+    <script type="module" src="js/armado.js"></script>
+    <script type="module" src="js/auth.js"></script>
 </body>
 </html>

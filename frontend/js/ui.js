@@ -71,6 +71,45 @@ export function obtenerIcono(componente) {
     return ICONOS_POR_TIPO[tipo] || '⚙️';
 }
 
+function obtenerEspecificaciones(componente) {
+    const especificaciones = componente?.especificaciones;
+
+    if (!especificaciones) return {};
+
+    if (typeof especificaciones === 'string') {
+        try {
+            return JSON.parse(especificaciones);
+        } catch (error) {
+            return {};
+        }
+    }
+
+    return especificaciones;
+}
+
+/**
+ * Devuelve los watts que conviene mostrar en la tarjeta.
+ *
+ * Para las fuentes se muestra la potencia entregada (`potencia_w` / `watts`),
+ * no su consumo. Para el resto se usa el consumo del componente.
+ */
+function obtenerWattsComponente(componente) {
+    const tipo = obtenerNombreTipo(componente).toUpperCase();
+    const especificaciones = obtenerEspecificaciones(componente);
+
+    if (['PSU', 'FUENTE', 'FUENTE DE PODER'].includes(tipo)) {
+        return especificaciones.potencia_w
+            ?? especificaciones.watts
+            ?? componente?.consumo_watts
+            ?? '';
+    }
+
+    return componente?.consumo_watts
+        ?? especificaciones.consumo_w
+        ?? componente?.watts
+        ?? '';
+}
+
 /**
  * Devuelve el HTML de una tarjeta con las mismas clases que usa el maquetado.
  * Se expone para poder reutilizar el renderizado en cualquier pantalla.
@@ -80,14 +119,15 @@ export function renderizarTarjetaComponente(componente, opciones = {}) {
         id = '',
         draggable = false,
         inactiva = false,
-        descripcion = '',
+        descripcion = componente?.descripcion || '',
         pista = ''
     } = opciones;
 
     const nombre = componente?.nombre || componente?.name || 'Componente';
     const tipo = obtenerNombreTipo(componente);
     const icono = obtenerIcono(componente);
-    const watts = componente?.consumo_watts ?? componente?.watts ?? '';
+    const watts = obtenerWattsComponente(componente);
+    const idComponente = componente?.id_componente ?? componente?.id ?? '';
     const wattsTexto = watts === '' || watts == null
         ? ''
         : (/w$/i.test(String(watts).trim()) ? String(watts).trim() : `${watts} W`);
@@ -95,7 +135,8 @@ export function renderizarTarjetaComponente(componente, opciones = {}) {
     return `
         <div class="component-card${inactiva ? ' component-card-inactive' : ''}"
              ${draggable ? 'draggable="true"' : ''}
-             ${id ? `id="${escaparHTML(id)}"` : ''}>
+             ${id ? `id="${escaparHTML(id)}"` : ''}
+             ${idComponente !== '' ? `data-id="${escaparHTML(idComponente)}"` : ''}>
             <div class="comp-top">
                 <div class="comp-icon">${icono}</div>
                 <div class="comp-info">
@@ -111,11 +152,72 @@ export function renderizarTarjetaComponente(componente, opciones = {}) {
 }
 
 export function renderizarTarjetasComponentes(contenedor, componentes = [], opciones = {}) {
-    if (!contenedor) return;
+    if (!contenedor) return [];
 
     contenedor.innerHTML = componentes
         .map((componente) => renderizarTarjetaComponente(componente, opciones))
         .join('');
+
+    return Array.from(contenedor.querySelectorAll('.component-card'));
+}
+
+/**
+ * Renderiza todas las tarjetas dentro de un inventario existente.
+ *
+ * Conserva el encabezado y cualquier contenido extra del maquetado (por
+ * ejemplo, el enlace al video) y reemplaza únicamente las tarjetas viejas.
+ * No aplica ningún límite de cantidad: pinta todos los componentes recibidos.
+ */
+export function renderizarInventario(contenedor, componentes = [], opciones = {}) {
+    if (!contenedor) return [];
+
+    const {
+        draggable = true,
+        pista = '',
+        descripcion = null
+    } = opciones;
+
+    contenedor.querySelectorAll('.component-card').forEach((tarjeta) => {
+        tarjeta.remove();
+    });
+
+    const encabezado = contenedor.querySelector('.inventory-header');
+    const fragmento = document.createDocumentFragment();
+
+    componentes.forEach((componente) => {
+        const descripcionComponente = typeof descripcion === 'function'
+            ? descripcion(componente)
+            : (descripcion || componente?.descripcion || '');
+
+        const plantilla = document.createElement('div');
+        plantilla.innerHTML = renderizarTarjetaComponente(componente, {
+            draggable,
+            pista,
+            descripcion: descripcionComponente
+        }).trim();
+
+        const tarjeta = plantilla.firstElementChild;
+        if (!tarjeta) return;
+
+        // Guardamos la referencia completa para no depender de parsear el DOM.
+        tarjeta.__componente = componente;
+        fragmento.appendChild(tarjeta);
+    });
+
+    if (encabezado) {
+        encabezado.after(fragmento);
+    } else {
+        contenedor.prepend(fragmento);
+    }
+
+    if (encabezado) {
+        const contador = encabezado.querySelector('span');
+        if (contador) {
+            contador.textContent = `${componentes.length} disponible${componentes.length === 1 ? '' : 's'}`;
+        }
+    }
+
+    return Array.from(contenedor.querySelectorAll('.component-card'));
 }
 
 /**

@@ -8,17 +8,15 @@
  */
 
 import {
-    agregarComponenteSeleccionado,
     guardarComponente,
     guardarComponentes,
     guardarCpuId,
     guardarPlataforma,
     limpiarSeleccion,
-    obtenerComponentes,
-    obtenerCpuId,
     obtenerIdsSeleccionados,
     obtenerPerfil,
-    obtenerPlataforma
+    obtenerPlataforma,
+    quitarComponenteSeleccionado
 } from './storage.js';
 
 import {
@@ -33,6 +31,7 @@ import {
     mostrarAlerta,
     mostrarDiagnostico,
     mostrarErrorConexion,
+    renderizarInventario,
     renderizarInventarioFinal,
     resaltarZona,
     restablecerZona
@@ -60,6 +59,24 @@ const PLATAFORMAS = Object.freeze({
 let nombreCpuActual = 'Ryzen 5 7600';
 let plataformaActual = 'AMD';
 let compatibilidadVerificada = false;
+let arrastreActual = null;
+let componentesCache = null;
+
+/**
+ * Orden histórico de los IDs por defecto de cada plataforma.
+ * Se usa para quitar los IDs "placeholder" cuando el usuario elige un
+ * componente real desde el backend.
+ */
+const INDICE_PLACEHOLDER_POR_TIPO = Object.freeze({
+    cpu: 0,
+    motherboard: 1,
+    cooler: 2,
+    ram: 3,
+    almacenamiento: 4,
+    gpu: 5,
+    psu: 6,
+    gabinete: 7
+});
 
 function htmlCpuInstalado(nombre) {
     return `
@@ -71,23 +88,27 @@ function htmlCpuInstalado(nombre) {
 
 const PASOS = Object.freeze({
     cpu: {
-        cardSelector: '.component-card[draggable="true"]',
+        contenedorSelector: '.inventory-box',
         dropzoneSelector: '.dropzone',
-        pieza: 'procesador-amd',
         tipo: 'cpu',
-        watts: 65,
+        categoria: 'CPU',
+        pista: '⇱ Arrastra al socket de CPU resaltado',
         capacidad: 650,
-        installedHTML: () => htmlCpuInstalado(nombreCpuActual),
+        consumoBase: 0,
+        installedHTML: (componente) => htmlCpuInstalado(
+            componente?.nombre || nombreCpuActual
+        ),
         estilosZona: { borde: '1px solid #30363d', fondo: '#161b22' },
         colorBoton: 'rgba(88, 166, 255, 0.6)'
     },
     ram: {
-        cardSelector: '#ram-card',
+        contenedorSelector: '.inventory-box',
         dropzoneSelector: '.dropzone-ram',
-        pieza: 'memoria-ram',
         tipo: 'ram',
-        watts: 75,
+        categoria: 'RAM',
+        pista: '⇱ Arrastra a las ranuras DIMM',
         capacidad: 650,
+        consumoBase: 65,
         installedHTML: `
             <div style="font-size: 1.2rem; color: #4b5563; display: flex; gap: 4px; height: 100%;">
                 <div style="width: 10px; background: #30363d; height: 100%; border-radius: 2px;"></div>
@@ -98,12 +119,13 @@ const PASOS = Object.freeze({
         colorBoton: 'rgba(88, 166, 255, 0.6)'
     },
     cooler: {
-        cardSelector: '#cooler-card',
+        contenedorSelector: '.inventory-box',
         dropzoneSelector: '.dropzone-cooler',
-        pieza: 'cooler-cpu',
         tipo: 'cooler',
-        watts: 80,
+        categoria: 'CPU_COOLER',
+        pista: '⇱ Arrastra el disipador sobre el CPU',
         capacidad: 650,
+        consumoBase: 75,
         installedHTML: `
             <div style="font-size: 2.5rem; color: #8b949e;">❄</div>
             <div style="font-size: 0.65rem; color: #3fb950; font-weight: bold; margin-top: 5px;">✔ CONECTADO</div>
@@ -112,12 +134,13 @@ const PASOS = Object.freeze({
         colorBoton: 'rgba(88, 166, 255, 0.6)'
     },
     almacenamiento: {
-        cardSelector: '#m2-card',
+        contenedorSelector: '.inventory-box',
         dropzoneSelector: '.dropzone-m2',
-        pieza: 'almacenamiento-m2',
         tipo: 'almacenamiento',
-        watts: 85,
+        categoria: 'STORAGE',
+        pista: '⇱ Arrastra el M.2 a la ranura',
         capacidad: 650,
+        consumoBase: 80,
         installedHTML: `
             <div style="font-size: 0.55rem; color: #3fb950; font-weight: bold; pointer-events: none;">✔ INSTALADO</div>
         `,
@@ -125,10 +148,11 @@ const PASOS = Object.freeze({
         colorBoton: 'rgba(88, 166, 255, 0.6)'
     },
     psu: {
-        cardSelector: '#psu-card',
+        contenedorSelector: '.inventory-box',
         dropzoneSelector: '.dropzone-psu',
-        pieza: 'fuente-poder',
         tipo: 'psu',
+        categoria: 'PSU',
+        pista: '⇱ Arrastra la fuente a su bahía',
         capacidad: 650,
         soloCapacidad: true,
         installedHTML: `
@@ -139,12 +163,13 @@ const PASOS = Object.freeze({
         colorBoton: 'rgba(88, 166, 255, 0.6)'
     },
     gpu: {
-        cardSelector: '#gpu-card',
+        contenedorSelector: '.inventory-box',
         dropzoneSelector: '.dropzone-gpu',
-        pieza: 'tarjeta-grafica',
         tipo: 'gpu',
-        watts: 200,
+        categoria: 'GPU',
+        pista: '⇱ Arrastra la GPU al slot PCIe',
         capacidad: 650,
+        consumoBase: 85,
         resaltarCapacidad: true,
         installedHTML: `
             <div style="font-size: 1.5rem; color: #8b949e; margin-bottom: 2px;">🎮</div>
@@ -175,67 +200,254 @@ function alCargarDocumento(callback) {
     }
 }
 
-function contenidoInstalado(paso) {
+function contenidoInstalado(paso, componente) {
     return typeof paso.installedHTML === 'function'
-        ? paso.installedHTML()
+        ? paso.installedHTML(componente)
         : paso.installedHTML;
 }
 
-function obtenerDatosTarjeta(tarjeta, tipo) {
-    const datos = {
-        tipo,
-        nombre: tarjeta.querySelector('.comp-name')?.textContent.trim() || '',
-        descripcion: tarjeta.querySelector('.comp-desc')?.textContent.trim() || '',
-        watts: tarjeta.querySelector('.comp-watts')?.textContent.trim() || ''
-    };
+function plataformaVigente() {
+    const plataformaDeLaPagina = plataformaDePagina();
 
-    const id = Number(tarjeta.dataset.id);
-    if (Number.isFinite(id)) {
-        datos.id_componente = id;
+    if (plataformaDeLaPagina) {
+        plataformaActual = plataformaDeLaPagina;
+        return plataformaDeLaPagina;
     }
 
-    return datos;
+    const plataformaGuardada = obtenerPlataforma();
+
+    if (plataformaGuardada && PLATAFORMAS[plataformaGuardada]) {
+        plataformaActual = plataformaGuardada;
+        return plataformaGuardada;
+    }
+
+    return plataformaActual;
 }
 
-function guardarPaso(paso, tarjeta) {
-    const datos = obtenerDatosTarjeta(tarjeta, paso.tipo);
+function obtenerEspecificaciones(componente) {
+    const especificaciones = componente?.especificaciones;
+
+    if (!especificaciones) return {};
+
+    if (typeof especificaciones === 'string') {
+        try {
+            return JSON.parse(especificaciones);
+        } catch (error) {
+            return {};
+        }
+    }
+
+    return especificaciones;
+}
+
+function obtenerCategoria(componente) {
+    const categoria = componente?.categoria
+        || (typeof componente?.tipo === 'object' ? componente.tipo.nombre : componente?.tipo)
+        || '';
+
+    return String(categoria).toUpperCase();
+}
+
+function obtenerConsumoComponente(componente) {
+    const especificaciones = obtenerEspecificaciones(componente);
+    const consumo = componente?.consumo_watts
+        ?? especificaciones.consumo_w
+        ?? especificaciones.tdp_w
+        ?? 0;
+    const numero = Number(consumo);
+
+    return Number.isFinite(numero) ? numero : 0;
+}
+
+function obtenerPotenciaPsu(componente) {
+    const especificaciones = obtenerEspecificaciones(componente);
+    const potencia = especificaciones.potencia_w
+        ?? especificaciones.watts
+        ?? componente?.consumo_watts
+        ?? 0;
+    const numero = Number(potencia);
+
+    return Number.isFinite(numero) ? numero : 0;
+}
+
+function botonSiguiente() {
+    return document.querySelector('.btn-next, #btn-siguiente');
+}
+
+function quitarPlaceholder(tipo) {
+    const indice = INDICE_PLACEHOLDER_POR_TIPO[tipo];
+    if (indice == null) return;
+
+    const config = PLATAFORMAS[plataformaVigente()] || PLATAFORMAS.AMD;
+    const idPlaceholder = Number(config.ids[indice]);
+
+    if (Number.isFinite(idPlaceholder)) {
+        quitarComponenteSeleccionado(idPlaceholder);
+    }
+}
+
+function guardarPaso(paso, componente) {
+    const id = Number(componente?.id_componente ?? componente?.id);
+    const datos = {
+        tipo: paso.tipo,
+        categoria: obtenerCategoria(componente),
+        id_componente: Number.isFinite(id) ? id : null,
+        nombre: componente?.nombre || '',
+        descripcion: componente?.descripcion || '',
+        watts: obtenerConsumoComponente(componente)
+    };
+
+    // El armado arranca con IDs por defecto de la plataforma elegida.
+    // Al elegir un componente real, se quita el placeholder de ese slot.
+    quitarPlaceholder(paso.tipo);
 
     if (paso.tipo === 'cpu') {
-        let cpuId = obtenerCpuId();
-        const config = PLATAFORMAS[plataformaActual] || PLATAFORMAS.AMD;
-
-        if (cpuId == null) {
-            cpuId = config.ids[0];
-            guardarCpuId(cpuId);
+        if (datos.id_componente != null) {
+            guardarCpuId(datos.id_componente);
         }
 
-        datos.id_componente = cpuId;
-
-        // Si el ID por defecto de la plataforma estaba en la lista, se sustituye
-        // por el CPU real de la API sin dejar dos procesadores seleccionados.
-        const seleccionados = obtenerComponentes();
-        const indiceCpuPorDefecto = seleccionados.indexOf(config.ids[0]);
-
-        if (indiceCpuPorDefecto >= 0) {
-            seleccionados[indiceCpuPorDefecto] = cpuId;
-            guardarComponentes(seleccionados);
-        } else {
-            agregarComponenteSeleccionado(cpuId);
-        }
+        nombreCpuActual = datos.nombre || nombreCpuActual;
     }
 
     guardarComponente(paso.tipo, datos);
 }
 
-function configurarPaso(paso) {
-    const tarjeta = document.querySelector(paso.cardSelector);
-    const dropzone = document.querySelector(paso.dropzoneSelector);
+async function cargarComponentes() {
+    if (componentesCache) return componentesCache;
 
-    if (!tarjeta || !dropzone) return;
+    const response = await fetch(`${API_BASE}/componentes`);
 
-    tarjeta.addEventListener('dragstart', (evento) => {
-        evento.dataTransfer.setData('text/plain', paso.pieza);
+    if (!response.ok) {
+        throw new Error(`La API respondió con HTTP ${response.status}.`);
+    }
+
+    const datos = await response.json();
+    componentesCache = Array.isArray(datos) ? datos : [];
+
+    return componentesCache;
+}
+
+/**
+ * Devuelve todas las opciones del backend para el paso actual.
+ * No se aplica ningún límite de cantidad: se muestran todos los componentes.
+ * Los CPUs se filtran por socket de la plataforma (AM5 o LGA1700).
+ */
+function filtrarComponentesPaso(paso, componentes) {
+    const categoriaBuscada = paso.categoria.toUpperCase();
+    const deLaCategoria = componentes.filter(
+        (componente) => obtenerCategoria(componente) === categoriaBuscada
+    );
+
+    if (paso.tipo !== 'cpu') return deLaCategoria;
+
+    const plataforma = plataformaVigente();
+    const socketBuscado = plataforma === 'Intel' ? 'lga1700' : 'am5';
+
+    const porSocket = deLaCategoria.filter((componente) => {
+        const socket = String(obtenerEspecificaciones(componente).socket || '')
+            .toLowerCase()
+            .replace(/\s+/g, '');
+
+        if (socket) {
+            return socket.includes(socketBuscado);
+        }
+
+        const marca = String(componente.marca || '').toLowerCase();
+        const nombre = String(componente.nombre || '').toLowerCase();
+
+        return plataforma === 'Intel'
+            ? (marca.includes('intel') || nombre.includes('intel'))
+            : (marca.includes('amd') || nombre.includes('amd'));
+    });
+
+    return porSocket.length > 0 ? porSocket : deLaCategoria;
+}
+
+/**
+ * Clona el dropzone para descartar los listeners inline del HTML.
+ * Así el arrastre y el guardado quedan centralizados en este módulo.
+ */
+function prepararDropzone(dropzone) {
+    if (!dropzone) return null;
+
+    const clon = dropzone.cloneNode(true);
+
+    clon.style.borderColor = '';
+    clon.style.backgroundColor = '';
+    clon.style.border = '';
+    clon.style.animation = '';
+
+    dropzone.replaceWith(clon);
+
+    return clon;
+}
+
+function actualizarEstadisticas(paso, componente) {
+    if (paso.soloCapacidad) {
+        const potencia = obtenerPotenciaPsu(componente);
+        actualizarCapacidad(potencia > 0 ? potencia : paso.capacidad);
+        return;
+    }
+
+    const consumo = (paso.consumoBase || 0) + obtenerConsumoComponente(componente);
+
+    actualizarConsumo(consumo, paso.capacidad, {
+        resaltarCapacidad: paso.resaltarCapacidad
+    });
+}
+
+function instalarComponente(paso, dropzone, componente, tarjeta, contenedor) {
+    marcarZonaInstalada(
+        dropzone,
+        contenidoInstalado(paso, componente),
+        paso.estilosZona
+    );
+
+    actualizarEstadisticas(paso, componente);
+
+    // Se permite cambiar de componente: todas las tarjetas vuelven a estar
+    // disponibles y solamente queda marcada la elegida.
+    contenedor.querySelectorAll('.component-card').forEach((otraTarjeta) => {
+        otraTarjeta.setAttribute('draggable', 'true');
+        otraTarjeta.classList.remove('component-card-inactive');
+        otraTarjeta.style.cursor = '';
+    });
+
+    marcarTarjetaInstalada(tarjeta);
+
+    const boton = botonSiguiente();
+    habilitarBotonSiguiente(boton, paso.colorBoton);
+    if (boton) {
+        boton.disabled = false;
+    }
+
+    guardarPaso(paso, componente);
+}
+
+function configurarArrastre(contenedor, dropzone, paso) {
+    contenedor.addEventListener('dragstart', (evento) => {
+        const tarjeta = evento.target.closest?.('.component-card');
+
+        if (!tarjeta || !contenedor.contains(tarjeta)) return;
+        if (tarjeta.getAttribute('draggable') === 'false') return;
+
+        const componente = tarjeta.__componente;
+        if (!componente) return;
+
+        arrastreActual = { paso, componente, tarjeta };
+
+        const referencia = componente.id_componente
+            ?? componente.id
+            ?? componente.nombre
+            ?? 'componente';
+
+        evento.dataTransfer.setData('text/plain', String(referencia));
+        evento.dataTransfer.effectAllowed = 'move';
         marcarZonaDisponible(dropzone);
+    });
+
+    contenedor.addEventListener('dragend', () => {
+        restablecerZona(dropzone);
     });
 
     dropzone.addEventListener('dragover', (evento) => {
@@ -250,70 +462,57 @@ function configurarPaso(paso) {
     dropzone.addEventListener('drop', (evento) => {
         evento.preventDefault();
 
-        const piezaArrastrada = evento.dataTransfer.getData('text/plain');
-        if (piezaArrastrada !== paso.pieza) return;
+        const arrastre = arrastreActual;
+        restablecerZona(dropzone);
 
-        marcarZonaInstalada(dropzone, contenidoInstalado(paso), paso.estilosZona);
+        if (!arrastre || arrastre.paso !== paso) return;
 
-        if (paso.soloCapacidad) {
-            actualizarCapacidad(paso.capacidad);
-        } else {
-            actualizarConsumo(paso.watts, paso.capacidad, {
-                resaltarCapacidad: paso.resaltarCapacidad
-            });
-        }
+        instalarComponente(
+            paso,
+            dropzone,
+            arrastre.componente,
+            arrastre.tarjeta,
+            contenedor
+        );
 
-        marcarTarjetaInstalada(tarjeta);
-        habilitarBotonSiguiente(document.querySelector('.btn-next'), paso.colorBoton);
-        guardarPaso(paso, tarjeta);
+        arrastreActual = null;
     });
 }
 
-async function cargarCpuDesdeApi(plataforma) {
+async function configurarPaso(paso) {
+    const contenedor = document.querySelector(paso.contenedorSelector);
+    if (!contenedor) return;
+
     try {
-        const response = await fetch(`${API_BASE}/componentes`);
-        if (!response.ok) return;
+        const componentes = await cargarComponentes();
+        const opciones = filtrarComponentesPaso(paso, componentes);
 
-        const componentes = await response.json();
+        if (opciones.length === 0) {
+            console.warn(`No hay componentes disponibles para la categoría ${paso.categoria}.`);
+            return;
+        }
 
-        const cpuProcesador = componentes.find((componente) => {
-            const categoria = String(
-                componente.categoria
-                || (typeof componente.tipo === 'object' ? componente.tipo.nombre : componente.tipo)
-                || ''
-            ).toUpperCase();
-            const esCPU = categoria === 'CPU';
-
-            if (!esCPU) return false;
-
-            const plataformaTexto = plataforma.toLowerCase();
-            const marca = String(componente.marca || '').toLowerCase();
-            const nombre = String(componente.nombre || '').toLowerCase();
-            const socket = String(componente.especificaciones?.socket || '').toLowerCase();
-
-            const coincidePorMarcaONombre = marca.includes(plataformaTexto) || nombre.includes(plataformaTexto);
-            const coincidePorSocket = plataforma === 'AMD'
-                ? socket.includes('am5')
-                : (socket.includes('lga1700') || socket.includes('lga 1700'));
-
-            return coincidePorMarcaONombre || coincidePorSocket;
+        renderizarInventario(contenedor, opciones, {
+            draggable: true,
+            pista: paso.pista
         });
 
-        if (!cpuProcesador) return;
+        // Marca para que otros scripts de la página no vuelvan a pisar las
+        // tarjetas con datos estáticos o con un único componente.
+        contenedor.dataset.dinamico = 'true';
 
-        nombreCpuActual = cpuProcesador.nombre || nombreCpuActual;
+        const dropzone = prepararDropzone(
+            document.querySelector(paso.dropzoneSelector)
+        );
 
-        const nameElem = document.querySelector('.comp-name');
-        const wattsElem = document.querySelector('.comp-watts');
+        if (!dropzone) return;
 
-        if (nameElem) nameElem.textContent = nombreCpuActual;
-        if (wattsElem) wattsElem.textContent = `${cpuProcesador.consumo_watts || 65} W`;
-
-        if (cpuProcesador.id_componente != null) {
-            guardarCpuId(cpuProcesador.id_componente);
-        }
+        configurarArrastre(contenedor, dropzone, paso);
     } catch (error) {
-        console.warn('No se pudieron cargar los datos dinámicos del servidor, usando vista estática:', error);
+        console.warn(
+            'No se pudo cargar el inventario desde la API; se conserva la vista estática:',
+            error
+        );
     }
 }
 
@@ -329,12 +528,10 @@ function aplicarPlataforma(config) {
 
 async function inicializarPasoCPU() {
     const plataforma = plataformaDePagina() || obtenerPlataforma() || 'AMD';
-    const config = PLATAFORMAS[plataforma] || PLATAFORMAS.AMD;
 
     plataformaActual = PLATAFORMAS[plataforma] ? plataforma : 'AMD';
-    aplicarPlataforma(config);
-    configurarPaso(PASOS.cpu);
-    await cargarCpuDesdeApi(plataforma);
+    aplicarPlataforma(PLATAFORMAS[plataformaActual]);
+    await configurarPaso(PASOS.cpu);
 }
 
 function inicializarEleccionMother() {

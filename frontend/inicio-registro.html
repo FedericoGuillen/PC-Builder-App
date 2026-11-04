@@ -1143,25 +1143,7 @@ function togglePassword(inputId, button) {
     }
 }
 
-// Inicio de sesión
-document.getElementById("loginForm").addEventListener("submit", function(event) {
-
-    event.preventDefault();
-
-    alert("Formulario de inicio de sesión enviado.");
-
-    // Próximo paso: conectar el sistema de autenticación.
-});
-
-// Registro
-document.getElementById("registerForm").addEventListener("submit", function(event) {
-
-    event.preventDefault();
-
-    alert("Formulario de registro enviado.");
-
-    // Próximo paso: conectar la base de datos y crear el usuario.
-});
+// El inicio de sesión y el registro se manejan en js/auth.js.
 
 // Recuperación de contraseña
 document.getElementById("forgotPassword").addEventListener("click", function(event) {
@@ -1172,6 +1154,8 @@ document.getElementById("forgotPassword").addEventListener("click", function(eve
 });
 
 </script>
+
+<script type="module" src="js/auth.js"></script>
 
 </body>
 </html>

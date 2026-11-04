@@ -32,7 +32,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return esCPU && c.nombre.toLowerCase().includes(plataforma.toLowerCase());
             });
 
-            if (cpuProcesador) {
+            // Si armado.js ya renderizó el inventario dinámico, no se pisa
+            // la tarjeta con un CPU distinto al que muestran los datos.
+            const inventarioDinamico = document.querySelector('.inventory-box[data-dinamico="true"]');
+
+            if (cpuProcesador && !inventarioDinamico) {
                 // Actualizar la tarjeta del inventario con los datos reales
                 const nameElem = document.querySelector('.comp-name');
                 const wattsElem = document.querySelector('.comp-watts');

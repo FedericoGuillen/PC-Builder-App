@@ -154,6 +154,24 @@ export function agregarComponenteSeleccionado(id) {
     return seleccionados;
 }
 
+/**
+ * Quita un ID de la lista de componentes seleccionados.
+ * Se usa al reemplazar el componente de un slot para no enviar IDs obsoletos
+ * al endpoint de compatibilidad.
+ */
+export function quitarComponenteSeleccionado(id) {
+    const idNormalizado = obtenerId(id);
+    if (idNormalizado == null) return null;
+
+    const seleccionados = obtenerComponentes().filter(
+        (actual) => actual !== idNormalizado
+    );
+
+    guardarComponentes(seleccionados);
+
+    return seleccionados;
+}
+
 export function limpiarComponentesSeleccionados() {
     return eliminar(STORAGE_KEYS.componentes);
 }
@@ -169,9 +187,18 @@ export function guardarComponente(tipo, componente) {
         return null;
     }
 
+    // Se lee el componente anterior antes de sobrescribir el slot para poder
+    // sacar su ID de la lista que se envía a compatibilidad.
+    const idAnterior = obtenerId(obtenerComponente(tipo));
+
     escribirJSON(clave, componente);
 
     const id = obtenerId(componente);
+
+    if (idAnterior != null && idAnterior !== id) {
+        quitarComponenteSeleccionado(idAnterior);
+    }
+
     if (id != null) {
         agregarComponenteSeleccionado(id);
     }

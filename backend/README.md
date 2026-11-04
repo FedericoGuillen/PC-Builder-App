@@ -58,6 +58,31 @@ PYTHONPATH=backend uvicorn backend.main:app --reload
 El servidor quedará corriendo en: http://127.0.0.1:8000
 
 ---
+
+## 📦 Carga del catálogo de componentes
+
+El script `backend/seed_componentes.py` verifica e inserta el catálogo ampliado
+de CPUs, motherboards, RAM, GPUs, fuentes, almacenamiento, gabinetes y coolers.
+Es idempotente y también normaliza las claves JSONB que consumen las reglas de
+compatibilidad (`tipo_ram`, `factores_forma_soportados`, `watts`, `consumo_w`, etc.).
+
+Desde la raíz del proyecto:
+
+```bash
+python backend/seed_componentes.py
+```
+
+Opciones útiles:
+
+```bash
+# Ver qué cambios haría sin guardarlos
+python backend/seed_componentes.py --dry-run
+
+# Solo insertar faltantes, sin actualizar especificaciones existentes
+python backend/seed_componentes.py --sin-actualizar
+```
+
+---
 Cómo Probar la API
 1. Abre tu navegador web y entra a la documentación interactiva de Swagger UI:
 http://127.0.0.1:8000/docs

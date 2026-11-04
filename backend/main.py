@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.controllers.auth_controller import router as auth_router
 from app.controllers.pc_controller import router as pc_router
 
 app = FastAPI(
@@ -17,8 +18,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Registramos el router del controlador
+# Registramos los routers de los controladores
 app.include_router(pc_router)
+app.include_router(auth_router)
 
 @app.get("/")
 def root():
