@@ -6,6 +6,8 @@
  * los elementos existentes (tarjetas, dropzones, botones y alertas).
  */
 
+import { obtenerComponentesGuardados } from './storage.js';
+
 const ICONOS_POR_TIPO = Object.freeze({
     CPU: '🔳',
     PROCESADOR: '🔳',
@@ -221,15 +223,116 @@ export function renderizarInventario(contenedor, componentes = [], opciones = {}
 }
 
 /**
- * Actualiza el número de watts y la capacidad mostrada en el panel derecho.
+ * Convierte un valor de watts a número, tolerando textos como "65 W".
+ * Devuelve null cuando el valor no representa un número válido.
  */
-export function actualizarConsumo(watts, capacidad = 650, opciones = {}) {
+function convertirNumero(valor) {
+    if (valor === null || valor === undefined || valor === '') return null;
+
+    if (typeof valor === 'number') {
+        return Number.isFinite(valor) ? valor : null;
+    }
+
+    const numero = Number.parseFloat(String(valor).replace(',', '.'));
+    return Number.isFinite(numero) ? numero : null;
+}
+
+/**
+ * Obtiene el consumo real de un componente guardado.
+ *
+ * Se priorizan los campos de consumo (`consumo_w`, `consumo_watts`, `tdp_w`)
+ * y, para componentes que no son fuentes, se acepta `potencia_w` como
+ * respaldo. La potencia de una fuente es su capacidad de entrega, no su
+ * consumo, por eso no se suma al total.
+ */
+function obtenerConsumoGuardado(componente) {
+    const especificaciones = obtenerEspecificaciones(componente);
+    const categoria = String(
+        componente?.categoria
+        ?? (typeof componente?.tipo === 'object'
+            ? componente.tipo.nombre
+            : componente?.tipo)
+        ?? componente?.slot
+        ?? ''
+    ).toUpperCase();
+
+    const esFuente = ['PSU', 'FUENTE', 'FUENTE DE PODER'].includes(categoria);
+
+    const candidatos = [
+        componente?.consumo_watts,
+        componente?.consumo_w,
+        componente?.consumo,
+        componente?.tdp_w,
+        especificaciones.consumo_watts,
+        especificaciones.consumo_w,
+        especificaciones.consumo,
+        especificaciones.tdp_w
+    ];
+
+    for (const candidato of candidatos) {
+        const numero = convertirNumero(candidato);
+        if (numero !== null) return numero;
+    }
+
+    if (!esFuente) {
+        const potencia = convertirNumero(
+            componente?.potencia_w ?? especificaciones.potencia_w
+        );
+        if (potencia !== null) return potencia;
+
+        const watts = convertirNumero(
+            componente?.watts ?? especificaciones.watts
+        );
+        if (watts !== null) return watts;
+    }
+
+    return 0;
+}
+
+/**
+ * Calcula el consumo total del armado leyendo todos los componentes que
+ * están guardados en localStorage, sin importar el paso actual.
+ */
+export function calcularConsumoTotal() {
+    return obtenerComponentesGuardados().reduce(
+        (total, componente) => total + obtenerConsumoGuardado(componente),
+        0
+    );
+}
+
+/**
+ * Actualiza el número de watts y la capacidad mostrada en el panel derecho.
+ *
+ * Si no se pasa un total explícito, lo calcula desde localStorage. Soporta
+ * tanto el panel de los pasos intermedios (`.stats-value`) como el panel
+ * final (`#watts-number` / `#watts-max`).
+ */
+export function actualizarConsumo(watts = null, capacidad = 650, opciones = {}) {
+    const total = watts === null || watts === undefined
+        ? calcularConsumoTotal()
+        : (convertirNumero(watts) ?? 0);
+    const capacidadNumerica = convertirNumero(capacidad) ?? 650;
+
+    const wattsNumber = document.getElementById('watts-number');
+    const wattsMax = document.getElementById('watts-max');
+
+    if (wattsNumber && wattsMax) {
+        wattsNumber.textContent = String(total);
+        wattsMax.textContent = `Watts en uso / ${capacidadNumerica} W`;
+
+        if (opciones.resaltarCapacidad) {
+            wattsMax.style.color = '#3fb950';
+        }
+
+        return document.querySelector('.stats-value');
+    }
+
     const stats = document.querySelector('.stats-value');
     if (!stats) return null;
 
     const conservarId = Boolean(stats.querySelector('#capacity-text'));
     const spanInicio = conservarId ? '<span id="capacity-text">' : '<span>';
-    stats.innerHTML = `${watts} ${spanInicio}Watts en uso / ${capacidad} W</span>`;
+    stats.innerHTML = `${total} ${spanInicio}Watts en uso / ${capacidadNumerica} W</span>`;
 
     const etiquetaCapacidad = stats.querySelector('#capacity-text');
     if (etiquetaCapacidad && opciones.resaltarCapacidad) {
@@ -240,21 +343,11 @@ export function actualizarConsumo(watts, capacidad = 650, opciones = {}) {
 }
 
 /**
- * Actualiza solamente la capacidad de la fuente, conservando el consumo actual.
+ * Actualiza solamente la capacidad de la fuente, recalculando el consumo
+ * total desde localStorage para no arrastrar valores viejos del DOM.
  */
 export function actualizarCapacidad(capacidad = 650) {
-    const stats = document.querySelector('.stats-value');
-    if (!stats) return null;
-
-    const consumoActual = Number.parseInt(stats.textContent, 10) || 0;
-    stats.innerHTML = `${consumoActual} <span id="capacity-text">Watts en uso / ${capacidad} W</span>`;
-
-    const etiquetaCapacidad = stats.querySelector('#capacity-text');
-    if (etiquetaCapacidad) {
-        etiquetaCapacidad.style.color = '#3fb950';
-    }
-
-    return stats;
+    return actualizarConsumo(null, capacidad);
 }
 
 /* -------------------------------------------------------------------------- */

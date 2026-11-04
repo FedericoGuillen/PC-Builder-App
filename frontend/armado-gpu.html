@@ -497,11 +497,7 @@
     <script>
         const tarjetasGPU = document.querySelectorAll('.component-card[draggable="true"]');
 const dropzone = document.querySelector('.dropzone-gpu');
-const wattsDisplay = document.querySelector('.stats-value');
 const btnSiguiente = document.getElementById('btn-finalizar'); // Se cambió a btn-finalizar según tu HTML
-
-// Consumo acumulado de las piezas anteriores (CPU 65W + Cooler 5W + RAM 10W + M.2 5W)
-const consumoBase = 85; 
 
 tarjetasGPU.forEach(tarjeta => {
     tarjeta.addEventListener('dragstart', (evento) => {
@@ -531,7 +527,7 @@ dropzone.addEventListener('drop', (evento) => {
     const datosArrastrados = evento.dataTransfer.getData('text/plain');
 
     if (datosArrastrados) {
-        const [nombrePieza, wattsPieza] = datosArrastrados.split('|');
+        const [nombrePieza] = datosArrastrados.split('|');
 
         dropzone.style.border = '1px solid #161b22';
         dropzone.style.backgroundColor = '#1f2937';
@@ -543,12 +539,6 @@ dropzone.addEventListener('drop', (evento) => {
             <div style="color: white; font-size: 0.7rem; font-weight: bold; margin-bottom: 2px; text-align: center;">${nombrePieza}</div>
             <div style="font-size: 0.65rem; color: #3fb950; font-weight: bold; pointer-events: none;">✔ CONECTADA</div>
         `;
-
-        // Sumamos dinámicamente el consumo base con el de la GPU elegida
-        const consumoTotal = consumoBase + parseInt(wattsPieza);
-        
-        // Para mantener el diseño intacto, conservamos el span con ID 'capacity-text'
-        wattsDisplay.innerHTML = `${consumoTotal} <span id="capacity-text" style="color: #3fb950;">Watts en uso / 650 W</span>`;
 
         tarjetasGPU.forEach(t => {
             t.setAttribute('draggable', 'false');

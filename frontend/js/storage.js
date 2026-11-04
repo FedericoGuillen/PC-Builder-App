@@ -311,6 +311,29 @@ export function obtenerIdsSeleccionados() {
     return normalizarIds(ids);
 }
 
+/**
+ * Devuelve los objetos completos guardados en cada slot del armado.
+ *
+ * Es la fuente de verdad para cálculos acumulados (por ejemplo, el consumo
+ * total en watts): recorre CPU, motherboard, RAM, GPU, almacenamiento,
+ * cooler, fuente y gabinete sin depender de la pantalla actual.
+ */
+export function obtenerComponentesGuardados() {
+    return Object.keys(SLOT_KEYS)
+        .map((slot) => {
+            const componente = obtenerComponente(slot);
+
+            if (!componente || typeof componente !== 'object') return null;
+
+            return {
+                ...componente,
+                tipo: componente.tipo || slot,
+                slot
+            };
+        })
+        .filter(Boolean);
+}
+
 /* -------------------------------------------------------------------------- */
 /* Sesión de usuario                                                           */
 /* -------------------------------------------------------------------------- */

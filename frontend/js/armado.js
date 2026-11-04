@@ -13,6 +13,7 @@ import {
     guardarCpuId,
     guardarPlataforma,
     limpiarSeleccion,
+    obtenerComponente,
     obtenerIdsSeleccionados,
     obtenerPerfil,
     obtenerPlataforma,
@@ -20,9 +21,9 @@ import {
 } from './storage.js';
 
 import {
-    actualizarCapacidad,
     actualizarConsumo,
     actualizarEstadoBoton,
+    calcularConsumoTotal,
     escaparHTML,
     habilitarBotonSiguiente,
     marcarTarjetaInstalada,
@@ -94,7 +95,6 @@ const PASOS = Object.freeze({
         categoria: 'CPU',
         pista: '⇱ Arrastra al socket de CPU resaltado',
         capacidad: 650,
-        consumoBase: 0,
         installedHTML: (componente) => htmlCpuInstalado(
             componente?.nombre || nombreCpuActual
         ),
@@ -108,7 +108,6 @@ const PASOS = Object.freeze({
         categoria: 'RAM',
         pista: '⇱ Arrastra a las ranuras DIMM',
         capacidad: 650,
-        consumoBase: 65,
         installedHTML: `
             <div style="font-size: 1.2rem; color: #4b5563; display: flex; gap: 4px; height: 100%;">
                 <div style="width: 10px; background: #30363d; height: 100%; border-radius: 2px;"></div>
@@ -125,7 +124,6 @@ const PASOS = Object.freeze({
         categoria: 'CPU_COOLER',
         pista: '⇱ Arrastra el disipador sobre el CPU',
         capacidad: 650,
-        consumoBase: 75,
         installedHTML: `
             <div style="font-size: 2.5rem; color: #8b949e;">❄</div>
             <div style="font-size: 0.65rem; color: #3fb950; font-weight: bold; margin-top: 5px;">✔ CONECTADO</div>
@@ -140,7 +138,6 @@ const PASOS = Object.freeze({
         categoria: 'STORAGE',
         pista: '⇱ Arrastra el M.2 a la ranura',
         capacidad: 650,
-        consumoBase: 80,
         installedHTML: `
             <div style="font-size: 0.55rem; color: #3fb950; font-weight: bold; pointer-events: none;">✔ INSTALADO</div>
         `,
@@ -154,7 +151,6 @@ const PASOS = Object.freeze({
         categoria: 'PSU',
         pista: '⇱ Arrastra la fuente a su bahía',
         capacidad: 650,
-        soloCapacidad: true,
         installedHTML: `
             <div style="font-size: 2rem; color: #8b949e; margin-bottom: 5px;">🔌</div>
             <div style="font-size: 0.75rem; color: #3fb950; font-weight: bold; pointer-events: none;">✔ ATORNILLADA</div>
@@ -169,7 +165,6 @@ const PASOS = Object.freeze({
         categoria: 'GPU',
         pista: '⇱ Arrastra la GPU al slot PCIe',
         capacidad: 650,
-        consumoBase: 85,
         resaltarCapacidad: true,
         installedHTML: `
             <div style="font-size: 1.5rem; color: #8b949e; margin-bottom: 2px;">🎮</div>
@@ -294,7 +289,9 @@ function guardarPaso(paso, componente) {
         id_componente: Number.isFinite(id) ? id : null,
         nombre: componente?.nombre || '',
         descripcion: componente?.descripcion || '',
-        watts: obtenerConsumoComponente(componente)
+        watts: obtenerConsumoComponente(componente),
+        potencia_w: obtenerPotenciaPsu(componente),
+        especificaciones: componente?.especificaciones ?? null
     };
 
     // El armado arranca con IDs por defecto de la plataforma elegida.
@@ -382,18 +379,31 @@ function prepararDropzone(dropzone) {
     return clon;
 }
 
-function actualizarEstadisticas(paso, componente) {
-    if (paso.soloCapacidad) {
-        const potencia = obtenerPotenciaPsu(componente);
-        actualizarCapacidad(potencia > 0 ? potencia : paso.capacidad);
-        return;
-    }
+function capacidadFuenteGuardada(paso = {}) {
+    const psu = obtenerComponente('psu');
+    const potencia = psu ? obtenerPotenciaPsu(psu) : 0;
 
-    const consumo = (paso.consumoBase || 0) + obtenerConsumoComponente(componente);
+    if (potencia > 0) return potencia;
 
-    actualizarConsumo(consumo, paso.capacidad, {
-        resaltarCapacidad: paso.resaltarCapacidad
+    const capacidadPaso = Number(paso.capacidad);
+    return Number.isFinite(capacidadPaso) && capacidadPaso > 0
+        ? capacidadPaso
+        : 650;
+}
+
+/**
+ * Recalcula y pinta el consumo acumulado de todos los slots guardados.
+ * Se invoca al cargar cada paso y después de guardar un componente.
+ */
+function actualizarPanelConsumo(paso = {}) {
+    const total = calcularConsumoTotal();
+    const capacidad = capacidadFuenteGuardada(paso);
+
+    actualizarConsumo(total, capacidad, {
+        resaltarCapacidad: Boolean(paso.resaltarCapacidad)
     });
+
+    return total;
 }
 
 function instalarComponente(paso, dropzone, componente, tarjeta, contenedor) {
@@ -403,7 +413,9 @@ function instalarComponente(paso, dropzone, componente, tarjeta, contenedor) {
         paso.estilosZona
     );
 
-    actualizarEstadisticas(paso, componente);
+    // Primero persiste el slot y después recalcula el acumulado global.
+    guardarPaso(paso, componente);
+    actualizarPanelConsumo(paso);
 
     // Se permite cambiar de componente: todas las tarjetas vuelven a estar
     // disponibles y solamente queda marcada la elegida.
@@ -420,8 +432,6 @@ function instalarComponente(paso, dropzone, componente, tarjeta, contenedor) {
     if (boton) {
         boton.disabled = false;
     }
-
-    guardarPaso(paso, componente);
 }
 
 function configurarArrastre(contenedor, dropzone, paso) {
@@ -482,6 +492,9 @@ function configurarArrastre(contenedor, dropzone, paso) {
 async function configurarPaso(paso) {
     const contenedor = document.querySelector(paso.contenedorSelector);
     if (!contenedor) return;
+
+    // Refleja de inmediato lo elegido en pasos anteriores.
+    actualizarPanelConsumo(paso);
 
     try {
         const componentes = await cargarComponentes();
@@ -586,6 +599,11 @@ function configurarBotonEncendido() {
 
     let isPowerOn = false;
 
+    const capacidad = capacidadFuenteGuardada(PASOS.psu);
+
+    // La pantalla final arranca apagada: 0 W de consumo y la capacidad real
+    // de la fuente ya guardada. Al encender se muestra el total acumulado.
+    actualizarConsumo(0, capacidad);
     actualizarEstadoEncendido(false, 'Validando compatibilidad...');
 
     btnEncender.addEventListener('click', () => {
@@ -603,8 +621,13 @@ function configurarBotonEncendido() {
                 statusText.innerHTML = '● ENCENDIDO';
                 statusText.style.color = 'var(--accent-green)';
             }
-            if (wattsNumber) wattsNumber.innerHTML = '200';
-            if (wattsMax) wattsMax.style.color = 'var(--accent-green)';
+            if (wattsNumber) {
+                wattsNumber.textContent = String(calcularConsumoTotal());
+            }
+            if (wattsMax) {
+                wattsMax.textContent = `Watts en uso / ${capacidad} W`;
+                wattsMax.style.color = 'var(--accent-green)';
+            }
             return;
         }
 
@@ -617,8 +640,11 @@ function configurarBotonEncendido() {
             statusText.innerHTML = '● APAGADO';
             statusText.style.color = 'var(--text-muted)';
         }
-        if (wattsNumber) wattsNumber.innerHTML = '0';
-        if (wattsMax) wattsMax.style.color = 'var(--text-muted)';
+        if (wattsNumber) wattsNumber.textContent = '0';
+        if (wattsMax) {
+            wattsMax.textContent = `Watts en uso / ${capacidad} W`;
+            wattsMax.style.color = 'var(--text-muted)';
+        }
     });
 }
 
