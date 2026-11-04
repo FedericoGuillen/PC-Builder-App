@@ -41,8 +41,13 @@ class ReglaConsumoFuenteStrategy(ReglaCompatibilidadStrategy):
                 "mensaje": "Falta agregar una fuente de poder (PSU) indispensable para alimentar los componentes."
             }
             
-        # Extraemos los watts de la fuente desde el campo JSONB 'especificaciones'
-        watts_fuente = fuente.especificaciones.get("watts", 0)
+        # Extraemos los watts de la fuente desde el campo JSONB 'especificaciones'.
+        # El seed histórico usa 'potencia_w', por lo que se aceptan ambas claves.
+        watts_fuente = (
+            fuente.especificaciones.get("watts")
+            or fuente.especificaciones.get("potencia_w")
+            or 0
+        )
         
         if consumo_total > watts_fuente:
             return {
