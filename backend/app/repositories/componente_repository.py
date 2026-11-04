@@ -289,7 +289,7 @@ class ComponenteRepository:
             ),
         )
 
- def obtener_fuentes_por_potencia_minima(self, potencia_minima: int):
+    def obtener_fuentes_por_potencia_minima(self, potencia_minima: int):
         """Obtiene fuentes con potencia igual o superior a la solicitada."""
 
         consulta = text("""

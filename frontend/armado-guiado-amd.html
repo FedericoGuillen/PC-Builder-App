@@ -575,7 +575,7 @@
             
 
     </main>
-
+    <script src="./js/armado-guiado-amd.js"></script>
 <!-- SCRIPT DE INTERACTIVIDAD (DRAG AND DROP) -->
     <script>
         // 1. Seleccionamos TODAS las tarjetas arrastrables y los elementos clave
@@ -632,8 +632,43 @@ dropzone.addEventListener('drop', (evento) => {
             t.style.cursor = 'default';
         });
 
-        // D. Habilitamos el botón (ahora dentro de la validación correcta)
-        btnSiguiente.disabled = false;
+        // LA MAGIA: Qué pasa cuando soltamos el componente adentro del socket
+        dropzone.addEventListener('drop', (evento) => {
+            evento.preventDefault();
+            
+            const piezaArrastrada = evento.dataTransfer.getData('text/plain');
+
+            if (piezaArrastrada === 'procesador-amd') {
+                // A. Cambiamos el aspecto del socket para que parezca instalado
+                dropzone.style.border = '1px solid #30363d'; /* Borde de componente encastrado */
+                dropzone.style.backgroundColor = '#161b22'; /* Fondo oscuro sólido de la tarjeta */
+                dropzone.style.animation = 'none'; /* Se apaga el pulso */
+                
+                // Rediseñamos el interior del dropzone para mostrar el CPU instalado
+                dropzone.innerHTML = `
+                   <div style="font-size: 2rem; margin-bottom: 5px;">🔳</div>
+                    <div style="font-weight: bold; color: white; font-size: 0.85rem;">Ryzen 5 7600</div>
+                    <div style="font-size:0.65rem; color:#3fb950; font-weight: 600; margin-top:4px;">✔ INSTALADO</div>
+                `;
+
+                // B. Actualizamos el consumo de energía (Stats)
+                    wattsDisplay.innerHTML = '65 <span>Watts en uso / 650 W</span>';
+
+                // C. Apagamos la tarjeta en el inventario
+                cpuCard.setAttribute('draggable', 'false');
+                cpuCard.classList.add('component-card-inactive');
+                cpuCard.style.cursor = 'default';
+
+        // D. Guardar el ID en localStorage para transferir a la pantalla final
+        const cpuId = localStorage.getItem('cpu_seleccionado_id') || 1;
+        let componentes = JSON.parse(localStorage.getItem('componentes_seleccionados')) || [];
+        
+        if (!componentes.includes(Number(cpuId))) {
+            componentes.push(Number(cpuId));
+            localStorage.setItem('componentes_seleccionados', JSON.stringify(componentes));
+        }
+
+        // E. Habilitar visualmente el botón Siguiente
         btnSiguiente.style.boxShadow = '0 0 20px rgba(88, 166, 255, 0.6)';
         btnSiguiente.style.transform = 'scale(1.02)';
     }
