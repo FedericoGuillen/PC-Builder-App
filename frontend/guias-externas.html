@@ -21,36 +21,76 @@
         }
 
         /* NAVBAR */
-        .navbar {
+        nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 20px 8%;
-            background: #0b111b;
-            border-bottom: 1px solid #1d2b3a;
+            gap: 20px;
+            padding: 18px 40px;
+            background: rgba(9, 16, 25, 0.88);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
         }
 
-        .logo {
-            font-size: 26px;
-            font-weight: bold;
-            color: #58a6ff;
-            text-decoration: none;
-            letter-spacing: 1px;
-        }
-
-        .nav-links {
+        .nav-left {
             display: flex;
-            gap: 25px;
+            align-items: center;
+            gap: 12px;
         }
 
-        .nav-links a {
-            color: #c9d1d9;
-            text-decoration: none;
-            transition: 0.3s;
-        }
-
-        .nav-links a:hover {
+        .logo-icon {
+            width: 34px;
+            height: 34px;
+            background: #10263a;
+            border: 1px solid #58a6ff;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             color: #58a6ff;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .nav-center a {
+            color: #8b9bad;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .nav-center a:hover {
+            color: #ffffff;
+        }
+
+        .nav-center a.active {
+            color: #58a6ff;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-prev {
+            background: #111d2b;
+            border: 1px solid #25394d;
+            border-radius: 6px;
+            padding: 9px 15px;
+            color: #dce8f5;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+
+        .btn-prev:hover {
+            border-color: #58a6ff;
+            background: #172b40;
         }
 
         /* CONTENIDO */
@@ -138,10 +178,18 @@
         }
 
         /* RESPONSIVE */
-        @media (max-width: 600px) {
-            .navbar {
-                flex-direction: column;
-                gap: 15px;
+        @media (max-width: 760px) {
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                padding: 14px 18px;
+            }
+
+            .nav-center {
+                order: 3;
+                width: 100%;
+                justify-content: center;
+                gap: 18px;
             }
 
             .header h1 {
@@ -250,7 +298,7 @@
 
             <div class="marcas">
                 <a href="https://www.westerndigital.com/" target="_blank" rel="noopener noreferrer" class="marca-btn">
-                    <img src="https://cdn.simpleicons.org/westerndigital/FFFFFF" alt="Logo Western Digital" class="marca-logo">
+                    <img src="https://www.google.com/s2/favicons?domain=westerndigital.com&sz=64" alt="Logo Western Digital" class="marca-logo">
                     Western Digital
                 </a>
 
@@ -275,7 +323,7 @@
                 </a>
 
                 <a href="https://latam.evga.com/" target="_blank" rel="noopener noreferrer" class="marca-btn">
-                    <img src="https://cdn.simpleicons.org/evga/FFFFFF" alt="Logo EVGA" class="marca-logo">
+                    <img src="https://www.google.com/s2/favicons?domain=evga.com&sz=64" alt="Logo EVGA" class="marca-logo">
                     EVGA
                 </a>
                 
