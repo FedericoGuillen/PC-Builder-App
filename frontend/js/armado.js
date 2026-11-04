@@ -79,6 +79,21 @@ const INDICE_PLACEHOLDER_POR_TIPO = Object.freeze({
     gabinete: 7
 });
 
+/**
+ * Componentes que deben estar guardados para habilitar "Finalizar Armado".
+ * El gabinete no se elige en el flujo: se usa el modelo predeterminado de la
+ * plataforma, por eso no se exige como slot.
+ */
+const SLOTS_REQUERIDOS_ARMADO = Object.freeze([
+    { tipo: 'cpu', etiqueta: 'CPU', articulo: 'el' },
+    { tipo: 'motherboard', etiqueta: 'Motherboard', articulo: 'la' },
+    { tipo: 'ram', etiqueta: 'RAM', articulo: 'la' },
+    { tipo: 'cooler', etiqueta: 'Disipador', articulo: 'el' },
+    { tipo: 'almacenamiento', etiqueta: 'Almacenamiento', articulo: 'el' },
+    { tipo: 'psu', etiqueta: 'Fuente de Poder', articulo: 'la' },
+    { tipo: 'gpu', etiqueta: 'Tarjeta Gráfica', articulo: 'la' }
+]);
+
 function htmlCpuInstalado(nombre) {
     return `
         <div style="font-size: 2rem; margin-bottom: 5px;">🔳</div>
@@ -166,6 +181,7 @@ const PASOS = Object.freeze({
         pista: '⇱ Arrastra la GPU al slot PCIe',
         capacidad: 650,
         resaltarCapacidad: true,
+        finalizaArmado: true,
         installedHTML: `
             <div style="font-size: 1.5rem; color: #8b949e; margin-bottom: 2px;">🎮</div>
             <div style="font-size: 0.75rem; color: #3fb950; font-weight: bold; pointer-events: none;">✔ CONECTADA</div>
@@ -406,6 +422,247 @@ function actualizarPanelConsumo(paso = {}) {
     return total;
 }
 
+function slotArmadoCargado(tipo) {
+    const componente = obtenerComponente(tipo);
+
+    if (!componente || typeof componente !== 'object') return false;
+
+    const id = Number(componente.id_componente ?? componente.id);
+    return Number.isFinite(id) || Boolean(componente.nombre);
+}
+
+/**
+ * Valida que todos los slots necesarios para finalizar el armado estén
+ * guardados en localStorage. Deja en consola el detalle de cada slot.
+ */
+function validarArmadoCompleto() {
+    const faltantes = SLOTS_REQUERIDOS_ARMADO.filter(
+        ({ tipo }) => !slotArmadoCargado(tipo)
+    );
+    const completo = faltantes.length === 0;
+
+    console.log('[Armado] Validación del botón Finalizar Armado:');
+    SLOTS_REQUERIDOS_ARMADO.forEach(({ tipo, etiqueta }) => {
+        const estado = slotArmadoCargado(tipo) ? 'cargado' : 'FALTA';
+        console.log(`[Armado]   - Slot "${tipo}" (${etiqueta}): ${estado}`);
+    });
+
+    if (completo) {
+        console.log('[Armado] Resultado: OK. Todos los slots requeridos están cargados.');
+    } else {
+        const detalle = faltantes
+            .map(({ tipo, etiqueta }) => `${tipo} (${etiqueta})`)
+            .join(', ');
+        console.log(`[Armado] Resultado: FALLA. Falta(n): ${detalle}.`);
+    }
+
+    return { completo, faltantes };
+}
+
+function mensajeArmadoIncompleto(faltantes) {
+    if (!Array.isArray(faltantes) || faltantes.length === 0) return '';
+
+    if (faltantes.length === 1) {
+        const { articulo, etiqueta } = faltantes[0];
+        return `Te falta seleccionar ${articulo} ${etiqueta} para completar tu armado.`;
+    }
+
+    return `Te faltan seleccionar: ${faltantes
+        .map(({ etiqueta }) => etiqueta)
+        .join(', ')}.`;
+}
+
+/**
+ * Crea (si hace falta) el contenedor de avisos junto a la navegación del paso.
+ */
+function obtenerContenedorAviso() {
+    let aviso = document.getElementById('armado-aviso');
+    if (aviso) return aviso;
+
+    const navegacion = document.querySelector('.step-nav');
+    if (!navegacion) return null;
+
+    aviso = document.createElement('div');
+    aviso.id = 'armado-aviso';
+    aviso.setAttribute('role', 'status');
+    aviso.setAttribute('aria-live', 'polite');
+    aviso.style.display = 'none';
+    aviso.style.marginTop = '20px';
+    aviso.style.padding = '12px 15px';
+    aviso.style.borderRadius = '8px';
+    aviso.style.border = '1px solid transparent';
+    aviso.style.fontSize = '0.85rem';
+    aviso.style.lineHeight = '1.45';
+
+    navegacion.parentNode.insertBefore(aviso, navegacion);
+
+    return aviso;
+}
+
+function mostrarAvisoArmado(tipo, opciones = {}) {
+    const aviso = obtenerContenedorAviso();
+    if (!aviso) return null;
+
+    if (!tipo) {
+        aviso.style.display = 'none';
+        aviso.innerHTML = '';
+        return aviso;
+    }
+
+    aviso.style.display = 'block';
+    mostrarAlerta(aviso, { tipo, ...opciones });
+
+    return aviso;
+}
+
+function paginaFinalArmado() {
+    return paginaActual().includes('intel')
+        ? 'armado-final-intel.html'
+        : 'armado-final.html';
+}
+
+/**
+ * Habilita o deshabilita "Finalizar Armado" según los slots guardados.
+ * Cuando falta algo, además de dejarlo en consola, muestra el motivo en la UI.
+ */
+function actualizarBotonFinalizar() {
+    const boton = document.getElementById('btn-finalizar');
+    if (!boton) return false;
+
+    const { completo, faltantes } = validarArmadoCompleto();
+
+    if (completo) {
+        boton.disabled = false;
+        boton.removeAttribute('disabled');
+        boton.title = 'Finalizar armado y validar compatibilidad';
+        mostrarAvisoArmado(null);
+        return true;
+    }
+
+    const mensaje = mensajeArmadoIncompleto(faltantes);
+    boton.disabled = true;
+    boton.setAttribute('disabled', '');
+    boton.title = mensaje;
+    mostrarAvisoArmado('advertencia', {
+        titulo: 'Armado incompleto',
+        mensaje
+    });
+
+    return false;
+}
+
+async function consultarCompatibilidad(componentesIds) {
+    const idPerfil = obtenerPerfil() || 1;
+
+    const respuesta = await fetch(`${API_BASE}/compatibilidad/validar`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json'
+        },
+        body: JSON.stringify({
+            id_perfil: idPerfil,
+            componentes_ids: componentesIds
+        })
+    });
+
+    const resultado = await respuesta.json().catch(() => null);
+
+    return { respuesta, resultado };
+}
+
+async function manejarFinalizarArmado(evento) {
+    evento?.preventDefault();
+
+    const boton = document.getElementById('btn-finalizar');
+    const { completo } = validarArmadoCompleto();
+
+    if (!completo) {
+        actualizarBotonFinalizar();
+        return;
+    }
+
+    const ids = obtenerIdsSeleccionados();
+    console.log('[Armado] POST /api/v1/compatibilidad/validar con IDs:', ids);
+
+    const aviso = mostrarAvisoArmado('info', {
+        titulo: 'Validando compatibilidad...',
+        mensaje: 'Consultando las reglas de compatibilidad en el servidor.'
+    });
+
+    const textoOriginal = boton?.textContent;
+    if (boton) {
+        boton.disabled = true;
+        boton.textContent = 'Validando...';
+    }
+
+    try {
+        const { respuesta, resultado } = await consultarCompatibilidad(ids);
+
+        if (!respuesta.ok) {
+            const detalle = typeof resultado?.detail === 'string'
+                ? resultado.detail
+                : `El servidor respondió con HTTP ${respuesta.status}.`;
+
+            mostrarAlerta(aviso, {
+                tipo: 'error',
+                titulo: 'No se pudo validar la compatibilidad',
+                mensaje: detalle
+            });
+            return;
+        }
+
+        if (!resultado || typeof resultado.es_compatible !== 'boolean') {
+            mostrarAlerta(aviso, {
+                tipo: 'error',
+                titulo: 'Respuesta inesperada del servidor',
+                mensaje: 'La API no devolvió el resultado de compatibilidad esperado.'
+            });
+            return;
+        }
+
+        console.log(
+            `[Armado] Resultado de compatibilidad: es_compatible = ${resultado.es_compatible}`,
+            resultado
+        );
+
+        const errores = Array.isArray(resultado.errores) ? resultado.errores : [];
+        const compatible = resultado.es_compatible && errores.length === 0;
+
+        if (compatible) {
+            // La pantalla final vuelve a validar y muestra el diagnóstico completo.
+            window.location.href = paginaFinalArmado();
+            return;
+        }
+
+        mostrarDiagnostico(aviso, resultado);
+    } catch (error) {
+        console.error('No se pudo conectar con la API de compatibilidad:', error);
+        mostrarErrorConexion(aviso, error.message);
+    } finally {
+        if (boton) {
+            boton.textContent = textoOriginal || 'Finalizar Armado ✔';
+            boton.disabled = false;
+            boton.removeAttribute('disabled');
+        }
+    }
+}
+
+function configurarBotonFinalizar() {
+    const boton = document.getElementById('btn-finalizar');
+    if (!boton) return;
+
+    // La navegación ahora depende de la validación de compatibilidad.
+    boton.removeAttribute('onclick');
+
+    if (boton.dataset.finalizarConfigurado !== 'true') {
+        boton.addEventListener('click', manejarFinalizarArmado);
+        boton.dataset.finalizarConfigurado = 'true';
+    }
+
+    actualizarBotonFinalizar();
+}
+
 function instalarComponente(paso, dropzone, componente, tarjeta, contenedor) {
     marcarZonaInstalada(
         dropzone,
@@ -431,6 +688,10 @@ function instalarComponente(paso, dropzone, componente, tarjeta, contenedor) {
     habilitarBotonSiguiente(boton, paso.colorBoton);
     if (boton) {
         boton.disabled = false;
+    }
+
+    if (paso.finalizaArmado) {
+        actualizarBotonFinalizar();
     }
 }
 
@@ -495,6 +756,10 @@ async function configurarPaso(paso) {
 
     // Refleja de inmediato lo elegido en pasos anteriores.
     actualizarPanelConsumo(paso);
+
+    if (paso.finalizaArmado) {
+        configurarBotonFinalizar();
+    }
 
     try {
         const componentes = await cargarComponentes();
@@ -682,6 +947,8 @@ export async function validarCompatibilidadAPI() {
     const componentesIds = obtenerIdsSeleccionados();
     const idPerfil = obtenerPerfil() || 1;
 
+    console.log('[Armado] Validando compatibilidad de la pantalla final con IDs:', componentesIds);
+
     if (summaryBox) {
         summaryBox.setAttribute('role', 'status');
         summaryBox.setAttribute('aria-live', 'polite');
@@ -741,6 +1008,11 @@ export async function validarCompatibilidadAPI() {
         actualizarEstadoEncendido(false, 'Respuesta inválida del servidor.');
         return null;
     }
+
+    console.log(
+        `[Armado] Resultado de compatibilidad (pantalla final): es_compatible = ${resultado.es_compatible}`,
+        resultado
+    );
 
     mostrarDiagnostico(summaryBox, resultado);
 

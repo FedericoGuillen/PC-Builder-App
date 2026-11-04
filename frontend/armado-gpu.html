@@ -380,7 +380,7 @@
 
             <div class="step-nav">
                 <a href="armado-fuente.html" style="text-decoration:none; display:flex; flex:1;"><button class="btn-prev">Atras</button></a>
-                <button id="btn-finalizar" disabled onclick="window.location.href='armado-final.html'">Finalizar Armado ✔</button>
+                <button id="btn-finalizar" type="button" disabled>Finalizar Armado ✔</button>
             </div>
         </div>
 
@@ -497,7 +497,6 @@
     <script>
         const tarjetasGPU = document.querySelectorAll('.component-card[draggable="true"]');
 const dropzone = document.querySelector('.dropzone-gpu');
-const btnSiguiente = document.getElementById('btn-finalizar'); // Se cambió a btn-finalizar según tu HTML
 
 tarjetasGPU.forEach(tarjeta => {
     tarjeta.addEventListener('dragstart', (evento) => {
@@ -546,10 +545,6 @@ dropzone.addEventListener('drop', (evento) => {
             t.style.cursor = 'default';
         });
 
-        // Desbloqueo del botón finalizar y efecto visual verde
-        btnSiguiente.disabled = false;
-        btnSiguiente.style.boxShadow = '0 0 20px rgba(63, 185, 80, 0.6)';
-        btnSiguiente.style.transform = 'scale(1.02)';
     }
 });
     </script>
