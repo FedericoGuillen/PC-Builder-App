@@ -5,13 +5,13 @@ Guía interactiva para el armado y compatibilidad de PC - TP Final - Programaci�
 > **Trabajo Práctico Final - Programación Orientada a Objetos 3**  
 > *Una aplicación web interactiva que enseña a seleccionar, verificar compatibilidades y ensamblar componentes de PC paso a paso.*
 
----
+----------------------------------------------
 
 ## 📌 Sobre el Proyecto
 
 El objetivo de este proyecto es acompañar a usuarios principiantes en la construcción de su propia computadora. Mediante un plano visual e interactivo, la aplicación permite entender el propósito de cada componente, verificar si son compatibles entre sí y guiar la instalación paso a paso.
 
----
+----------------------------------------------
 
 ## 🛠️ Tecnologías y Herramientas
 
@@ -22,7 +22,18 @@ El objetivo de este proyecto es acompañar a usuarios principiantes en la constr
 - **Frontend / Interfaz:** HTML, CSS, JavaScript
 - **Control de Versiones:** Git & GitHub
 
----
+----------------------------------------------
+
+👨‍💻 Mi contribución
+Participé en:
+
+Diseño de la base de datos PostgreSQL
+Creación de queries SQL
+Desarrollo de funciones y procedimientos
+Gestión del repositorio GitHub
+Testing e integración
+
+----------------------------------------------
 
 ## 👥 Integrantes - Grupo 7
 
