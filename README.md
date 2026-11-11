@@ -1,8 +1,8 @@
-# tpfinal-poo3-grupo7
-Guía interactiva para el armado y compatibilidad de PC - TP Final Objetos 3
+# TP Final - POO3- Grupo 7
+Guía interactiva para el armado y compatibilidad de PC - TP Final - Programación Orientada a Objetos 3
 # 🖥️ Guía Interactiva para Armado de PC
 
-> **Trabajo Práctico Final - Programación con Objetos 3**  
+> **Trabajo Práctico Final - Programación Orientada a Objetos 3**  
 > *Una aplicación web interactiva que enseña a seleccionar, verificar compatibilidades y ensamblar componentes de PC paso a paso.*
 
 ---
